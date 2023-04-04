@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-1.0-or-later
+// SPDX-License-Identifier: CC BY-NC 2.0
 pragma solidity ^0.8.9;
 
 import "../Interfaces/IERC20.sol";
@@ -44,8 +44,8 @@ struct SubscriptionStruct {
 
 struct UserData {
     uint256 subscriptionEndDate;
-    uint256 subscriptionId;
-    uint256 approval;
+    uint8 subscriptionId;
+    uint256 subscriptionLimit;
     uint256 lastPayment;
     bool canceled;
 }

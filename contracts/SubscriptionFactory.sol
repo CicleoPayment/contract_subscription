@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-1.0-or-later
+// SPDX-License-Identifier: CC BY-NC 2.0
 pragma solidity ^0.8.9;
 
 import "hardhat/console.sol";
@@ -6,72 +6,88 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {IRouter} from "./Types/CicleoTypes.sol";
 import {CicleoSubscriptionSecurity} from "./SubscriptionSecurity.sol";
 import {CicleoSubscriptionManager} from "./SubscriptionManager.sol";
+import {ICicleoSubscriptionRouter} from "./Interfaces/ICicleoSubscriptionRouter.sol";
 
+/// @title Cicleo Subscription Factory
+/// @author Pol Epie
+/// @notice This contract is used to create new subscription manager
 contract CicleoSubscriptionFactory is OwnableUpgradeable {
-    address public botAddress;
-
+    /// @notice idCount is the number of subscription manager created
     uint256 public idCount;
 
-    uint256 public taxPercent;
-    address public taxAccount;
+    /// @notice routerSwap Contract of the subscription router
+    IRouter public routerSwap;
 
-    IRouter public router;
+    /// @notice routerSubscription Address of the subscription router
+    address public routerSubscription;
+
+    /// @notice security Contract of the subscription security
     CicleoSubscriptionSecurity public security;
 
+    /// @notice ids Mapping of the subscription manager id to the corresponding address
     mapping(uint256 => address) public ids;
+
+    /// @notice subscriptionManagerId Mapping of the subscription manager address to the id
     mapping(address => uint256) public subscriptionManagerId;
 
+    /// @notice Emitted when a new subscription manager is created
     event SubscriptionManagerCreated(
         address creator,
         address indexed subscriptionAddress
     );
 
-    function initialize(
-        address _botAddress,
-        uint256 _taxPercent,
-        address _taxAccount,
-        address _router,
-        address _security
-    ) public initializer {
+    function initialize(address _security) public initializer {
         __Ownable_init();
 
-        botAddress = _botAddress;
-
-        taxPercent = _taxPercent;
-        taxAccount = _taxAccount;
-        router = IRouter(_router);
         security = CicleoSubscriptionSecurity(_security);
     }
 
-    /* SubManager get functions */
+    // SubManager get functions
 
+    /// @notice Verify if the user is admin of the subscription manager
+    /// @param user User to verify
+    /// @param id Id of the subscription manager
     function verifyIfOwner(
-        address _user,
-        uint256 _id
+        address user,
+        uint256 id
     ) public view returns (bool) {
-        return security.verifyIfOwner(_user, _id);
+        return security.verifyIfOwner(user, id);
     }
 
+    /// @notice Verify if a given address is a subscription manager
+    /// @param _address Address to verify
     function isSubscriptionManager(
         address _address
     ) public view returns (bool) {
         return subscriptionManagerId[_address] != 0;
     }
 
-    /* SubManager creation */
+    /// @notice Get the address of the tax account
+    function taxAccount() public view returns (address) {
+        return ICicleoSubscriptionRouter(routerSubscription).taxAccount();
+    }
 
+    // SubManager creation
+
+    /// @notice Create a new subscription manager
+    /// @param name Name of the subscription manager
+    /// @param token Token used for the subscription
+    /// @param treasury Address of the treasury
+    /// @param timerange Time range of the subscription (in seconds) (ex: 1 day = 86400, 30 days = 2592000)
     function createSubscriptionManager(
         string memory name,
         address token,
-        address treasury
+        address treasury,
+        uint256 timerange
     ) external returns (address) {
         idCount += 1;
-        
+
         CicleoSubscriptionManager subscription = new CicleoSubscriptionManager(
             address(this),
             name,
             token,
-            treasury
+            treasury,
+            timerange
         );
 
         security.mintNft(msg.sender, idCount);
@@ -85,25 +101,25 @@ contract CicleoSubscriptionFactory is OwnableUpgradeable {
         return address(subscription);
     }
 
-    /* Admin function */
+    // Admin function
 
+    /// @notice Set the address of the subscription security
+    /// @param _securityAddress Address of the subscription security
     function setSecurityAddress(address _securityAddress) external onlyOwner {
         security = CicleoSubscriptionSecurity(_securityAddress);
     }
 
-    function setBot(address _botAddress) external onlyOwner {
-        botAddress = _botAddress;
+    /// @notice Set the address of the subscription router
+    /// @param _routerSubscription Address of the subscription router
+    function setRouterSubscription(
+        address _routerSubscription
+    ) external onlyOwner {
+        routerSubscription = _routerSubscription;
     }
 
-    function setTaxPercent(uint256 _taxPercent) external onlyOwner {
-        taxPercent = _taxPercent;
-    }
-
-    function setTaxAccount(address _taxAccount) external onlyOwner {
-        taxAccount = _taxAccount;
-    }
-
-    function setRouter(address _router) external onlyOwner {
-        router = IRouter(_router);
+    /// @notice Set the address of the router swap (openocean)
+    /// @param _routerSwap Address of the router swap
+    function setRouterSwap(address _routerSwap) external onlyOwner {
+        routerSwap = IRouter(_routerSwap);
     }
 }

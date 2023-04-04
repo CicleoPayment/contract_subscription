@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-1.0-or-later
+// SPDX-License-Identifier: CC BY-NC 2.0
 pragma solidity ^0.8.9;
 
 import "hardhat/console.sol";
@@ -6,39 +6,62 @@ import "./Interfaces/IERC20.sol";
 import {SwapDescription, SubscriptionStruct, UserData, IRouter, IOpenOceanCaller} from "./Types/CicleoTypes.sol";
 import {CicleoSubscriptionFactory} from "./SubscriptionFactory.sol";
 
+/// @title Cicleo Subscription Manager
+/// @author Pol Epie
+/// @notice This contract is used to manage subscription payments
 contract CicleoSubscriptionManager {
-    event PaymentSubscription(
+    /// @notice users Mapping of the user address to the corresponding user data
+    mapping(address => UserData) public users;
+
+    /// @notice token Token used for the subscription
+    IERC20 public token;
+
+    /// @notice treasury Address of the treasury
+    address public treasury;
+
+    /// @notice factory Address of the subscription factory
+    CicleoSubscriptionFactory public factory;
+
+    /// @notice name Name of the subscription
+    string public name;
+
+    /// @notice subscriptionNumber Count of subscriptions
+    uint256 public subscriptionNumber;
+
+    /// @notice subscriptionDuration Duration of the subscription in seconds
+    uint256 public subscriptionDuration;
+
+    /// @notice Event when a user change his subscription limit
+    event EditSubscriptionLimit(
         address indexed user,
-        uint256 indexed subscrptionType,
-        uint256 price
+        uint256 amountMaxPerPeriod
     );
+
+    /// @notice Event when a user subscription state is changed (after a payment or via an admin)
     event UserEdited(
         address indexed user,
         uint256 indexed subscrptionId,
         uint256 endDate
     );
+
+    /// @notice Event when a user cancels / stop his subscription
     event Cancel(address indexed user);
-    event ApproveSubscription(address indexed user, uint256 amountPerMonth);
+
+    /// @notice Event when a user subscription is edited
     event SubscriptionEdited(
         address indexed user,
         uint256 indexed subscrptionId,
         uint256 price,
         bool isActive
     );
+
+    /// @notice Event when treasury is edited
     event TreasuryEdited(address indexed user, address newTreasury);
+
+    /// @notice Event when name is edited
     event NameEdited(address indexed user, string newName);
-    event SelectToken(address indexed user, address indexed tokenAddress);
 
-    mapping(uint256 => SubscriptionStruct) public subscriptions;
-    mapping(address => UserData) public users;
-
-    IERC20 public token;
-    address public treasury;
-    CicleoSubscriptionFactory public factory;
-    string public name;
-    uint256 public subscriptionNumber;
-    IRouter public router;
-
+    /// @notice Verify if the user is admin of the subscription manager
     modifier onlyOwner() {
         require(
             factory.verifyIfOwner(
@@ -54,242 +77,117 @@ contract CicleoSubscriptionManager {
         address _factory,
         string memory _name,
         address _token,
-        address _treasury
+        address _treasury,
+        uint256 _subscriptionDuration
     ) {
         factory = CicleoSubscriptionFactory(_factory);
         name = _name;
         token = IERC20(_token);
         treasury = _treasury;
-        router = factory.router();
-
-        emit TreasuryEdited(msg.sender, _treasury);
-        emit NameEdited(msg.sender, _name);
+        subscriptionDuration = _subscriptionDuration;
     }
 
-    function approveSubscription(uint256 amountMaxPerMonth) external {
-        users[msg.sender].approval = amountMaxPerMonth;
+    /// @notice Edit the subscription limit
+    /// @param amountMaxPerPeriod New subscription price limit per period in the submanager token
+    function changeSubscriptionLimit(uint256 amountMaxPerPeriod) external {
+        users[msg.sender].subscriptionLimit = amountMaxPerPeriod;
 
-        emit ApproveSubscription(msg.sender, amountMaxPerMonth);
+        emit EditSubscriptionLimit(msg.sender, amountMaxPerPeriod);
     }
 
-    function getSubscripionPrice(
+    /// @notice Function to pay subscription with submanger token
+    /// @param user User to pay the subscription
+    /// @param subscrptionId Id of the subscription
+    /// @param price Price of the subscription
+    /// @param endDate End date of the subscription
+    function payFunctionWithSubToken(
         address user,
-        uint256 subscriptionId
-    ) public view returns (uint256 price, uint256 endDate) {
-        (uint256 actualSubscriptionId, bool active) = getSubscriptionStatus(
-            user
+        uint8 subscrptionId,
+        uint256 price,
+        uint256 endDate
+    ) external {
+        address routerSubscription = factory.routerSubscription();
+
+        require(msg.sender == routerSubscription, "Not allowed to");
+        require(users[user].canceled == false, "Subscription is canceled");
+
+        //Verify subscription limit
+        require(
+            users[user].subscriptionLimit >= price,
+            "You need to approve our contract to spend this amount of tokens"
         );
 
-        if (active && actualSubscriptionId != 0) {
-            if (
-                subscriptions[actualSubscriptionId].price <
-                subscriptions[subscriptionId].price
-            ) {
-                uint256 oldSubPricePerDay = subscriptions[actualSubscriptionId]
-                    .price / 30;
-                uint256 newSubPricePerDay = subscriptions[subscriptionId]
-                    .price / 30;
+        uint256 balanceBefore = token.balanceOf(routerSubscription);
 
-                uint256 daysLeft = (users[user].subscriptionEndDate -
-                    block.timestamp) / 1 days;
+        token.transferFrom(user, routerSubscription, price);
 
-                return (
-                    (daysLeft * newSubPricePerDay) -
-                        (daysLeft * oldSubPricePerDay),
-                    users[user].subscriptionEndDate
-                );
-            } else {
-                return (0, users[user].subscriptionEndDate);
-            }
-        }
+        //Verify if the token have a transfer fees or if the swap goes okay
+        uint256 balanceAfter = token.balanceOf(routerSubscription);
+        require(
+            balanceAfter - balanceBefore >= price,
+            "The token have a transfer fee"
+        );
 
-        return (subscriptions[subscriptionId].price, block.timestamp + 31 days);
+        //Save subscription info
+
+        users[user].subscriptionEndDate = endDate;
+        users[user].subscriptionId = subscrptionId;
+        users[user].lastPayment = block.timestamp;
+        users[user].canceled = false;
     }
 
+    /// @notice Function to pay subscription with swap (OpenOcean)
+    /// @param user User to pay the subscription
+    /// @param executor Executor of the swap (OpenOcean)
+    /// @param desc Description of the swap (OpenOcean)
+    /// @param calls Calls of the swap (OpenOcean)
+    /// @param subscrptionId Id of the subscription
+    /// @param price Price of the subscription
+    /// @param endDate End date of the subscription
     function payFunctionWithSwap(
-        uint8 subscrptionType,
+        address user,
         IOpenOceanCaller executor,
         SwapDescription memory desc,
         IOpenOceanCaller.CallDescription[] calldata calls,
-        address user,
+        uint8 subscrptionId,
         uint256 price,
         uint256 endDate
-    ) internal {
-        require(
-            subscrptionType > 0 && subscrptionType <= subscriptionNumber,
-            "Wrong sub type"
-        );
-        require(
-            subscriptions[subscrptionType].isActive,
-            "Subscription is disabled"
-        );
+    ) external {
+        address routerSubscription = factory.routerSubscription();
+        require(msg.sender == routerSubscription, "Not allowed to");
+        require(users[user].canceled == false, "Subscription is canceled");
 
-        desc.minReturnAmount = price;
-
+        //Verify subscription limit
         require(
-            users[user].approval >= price,
+            users[user].subscriptionLimit >= price,
             "You need to approve our contract to spend this amount of tokens"
         );
 
+        IRouter routerSwap = factory.routerSwap();
+
+        //OpenOcean swap
+        desc.minReturnAmount = price;
+
         uint256 balanceBefore = token.balanceOf(address(this));
+
         IERC20(desc.srcToken).transferFrom(user, address(this), desc.amount);
+        IERC20(desc.srcToken).approve(address(routerSwap), desc.amount);
 
-        IERC20(desc.srcToken).approve(address(router), desc.amount);
-
-        //1inch swap
-        router.swap(executor, desc, calls);
+        routerSwap.swap(executor, desc, calls);
 
         //Verify if the token have a transfer fees or if the swap goes okay
-
         uint256 balanceAfter = token.balanceOf(address(this));
         require(balanceAfter - balanceBefore >= price, "Swap failed");
 
-        uint256 tax = (price * factory.taxPercent()) / 1000;
-
-        token.transfer(treasury, price - tax);
-        token.transfer(factory.taxAccount(), balanceAfter - (price - tax));
+        //Save subscription info
 
         users[user].subscriptionEndDate = endDate;
-        users[user].subscriptionId = subscrptionType;
+        users[user].subscriptionId = subscrptionId;
         users[user].lastPayment = block.timestamp;
         users[user].canceled = false;
-
-        emit PaymentSubscription(user, subscrptionType, price);
-        emit UserEdited(user, subscrptionType, endDate);
     }
 
-    function payFunction(
-        address user,
-        uint256 subscrptionType,
-        uint256 price,
-        uint256 endDate
-    ) internal {
-        require(
-            subscrptionType > 0 && subscrptionType <= subscriptionNumber,
-            "Wrong sub type"
-        );
-        require(
-            subscriptions[subscrptionType].isActive,
-            "Subscription is disabled"
-        );
-
-        require(
-            users[user].approval >= price,
-            "You need to approve our contract to spend this amount of tokens"
-        );
-
-        uint256 tax = (price * factory.taxPercent()) / 1000;
-
-        token.transferFrom(user, treasury, price - tax);
-        token.transferFrom(user, factory.taxAccount(), tax);
-
-        users[user].subscriptionEndDate = endDate;
-        users[user].subscriptionId = subscrptionType;
-        users[user].lastPayment = block.timestamp;
-        users[user].canceled = false;
-
-        emit PaymentSubscription(user, subscrptionType, price);
-        emit UserEdited(user, subscrptionType, endDate);
-    }
-
-    function subscriptionRenew(address user) external {
-        require(msg.sender == factory.botAddress(), "Not allowed to");
-
-        UserData memory userData = users[user];
-
-        require(
-            block.timestamp - userData.lastPayment >= 30 days,
-            "You can't renew subscription before 30 days"
-        );
-        require(userData.subscriptionId != 0, "No subscription for this user");
-        require(userData.canceled == false, "Subscription is canceled");
-
-        if (
-            token.allowance(user, address(this)) <
-            subscriptions[userData.subscriptionId].price ||
-            token.balanceOf(user) <
-            subscriptions[userData.subscriptionId].price ||
-            userData.approval < subscriptions[userData.subscriptionId].price
-        ) {
-            userData.canceled = true;
-        } else {
-            payFunction(
-                user,
-                userData.subscriptionId,
-                subscriptions[userData.subscriptionId].price,
-                block.timestamp + 31 days
-            );
-        }
-    }
-
-    function subscriptionRenewWithSwap(
-        address user,
-        IOpenOceanCaller executor,
-        SwapDescription memory desc,
-        IOpenOceanCaller.CallDescription[] calldata calls
-    ) external {
-        require(msg.sender == factory.botAddress(), "Not allowed to");
-
-        UserData memory userData = users[user];
-
-        require(
-            block.timestamp - userData.lastPayment >= 30 days,
-            "You can't renew subscription before 30 days"
-        );
-        require(userData.subscriptionId != 0, "No subscription for this user");
-        require(userData.canceled == false, "Subscription is canceled");
-
-        if (
-            token.allowance(user, address(this)) <
-            subscriptions[userData.subscriptionId].price ||
-            token.balanceOf(user) <
-            subscriptions[userData.subscriptionId].price ||
-            userData.approval < subscriptions[userData.subscriptionId].price
-        ) {
-            userData.canceled = true;
-        } else {
-            payFunctionWithSwap(
-                uint8(userData.subscriptionId),
-                executor,
-                desc,
-                calls,
-                msg.sender,
-                subscriptions[userData.subscriptionId].price,
-                block.timestamp + 31 days
-            );
-        }
-    }
-
-    function payment(uint8 id) external {
-        (uint256 price, uint256 endDate) = getSubscripionPrice(msg.sender, id);
-
-        payFunction(msg.sender, id, price, endDate);
-        emit SelectToken(msg.sender, address(token));
-    }
-
-    function paymentWithSwap(
-        uint8 id,
-        IOpenOceanCaller executor,
-        SwapDescription memory desc,
-        IOpenOceanCaller.CallDescription[] calldata calls
-    ) external {
-        require(id > 0 && id <= subscriptionNumber, "Wrong sub type");
-        require(subscriptions[id].isActive, "Subscription is disabled");
-
-        (uint256 price, uint256 endDate) = getSubscripionPrice(msg.sender, id);
-
-        payFunctionWithSwap(
-            id,
-            executor,
-            desc,
-            calls,
-            msg.sender,
-            price,
-            endDate
-        );
-        emit SelectToken(msg.sender, address(desc.srcToken));
-    }
-
+    /// @notice Function to cancel / stop subscription
     function cancel() external {
         users[msg.sender].canceled = true;
 
@@ -298,124 +196,78 @@ contract CicleoSubscriptionManager {
 
     //Get functions
 
-    function getSubscriptionStatus(
+    /// @notice Return the subscription status of a user
+    /// @param user User to get the subscription status
+    /// @return subscriptionId Id of the subscription (0 mean no subscription and 255 mean dynamic subscription)
+    /// @return isActive If the subscription is currently active
+    function getUserSubscriptionStatus(
         address user
-    ) public view returns (uint256 subscriptionId, bool isActive) {
+    ) public view returns (uint8 subscriptionId, bool isActive) {
         UserData memory userData = users[user];
         return (
             userData.subscriptionId,
-            subscriptions[userData.subscriptionId].price == 0 ? true : userData.subscriptionEndDate > block.timestamp
+            userData.subscriptionEndDate > block.timestamp
         );
     }
 
-    function getSubscriptions()
-        external
-        view
-        returns (SubscriptionStruct[] memory)
-    {
-        SubscriptionStruct[] memory result = new SubscriptionStruct[](
-            subscriptionNumber
-        );
-
-        for (uint256 i = 0; i < subscriptionNumber; i++) {
-            result[i] = subscriptions[i + 1];
-        }
-
-        return result;
+    /// @notice Return the subscription id of a user
+    /// @param user User to get the subscription id
+    /// @return subscriptionId Id of the subscription (0 mean no subscription and 255 mean dynamic subscription)
+    function getUserSubscriptionId(
+        address user
+    ) external view returns (uint8 subscriptionId) {
+        UserData memory userData = users[user];
+        return userData.subscriptionId;
     }
 
-    function isFreeSubscription(uint256 id)
-        external
-        view
-        returns (bool isFree)
-    {
-        return subscriptions[id].price == 0;
-    }
-
-    function getActiveSubscriptionCount()
-        external
-        view
-        returns (uint256 count)
-    {
-        for (uint256 i = 0; i < subscriptionNumber; i++) {
-            if (subscriptions[i + 1].isActive) count += 1;
-        }
-
-        return count;
-    }
-
+    /// @notice Return the token address of the submanager
     function tokenAddress() external view returns (address) {
         return address(token);
     }
 
+    /// @notice Return the token decimals of the submanager
     function tokenDecimals() external view returns (uint8) {
         return token.decimals();
     }
 
+    /// @notice Return the token symbol of the submanager
     function tokenSymbol() external view returns (string memory) {
         return token.symbol();
     }
 
     //Admin functions
 
-    function newSubscription(
-        uint256 _subscriptionPrice,
-        string memory _name
-    ) external onlyOwner {
-        subscriptionNumber += 1;
-
-        subscriptions[subscriptionNumber] = SubscriptionStruct(
-            _subscriptionPrice,
-            true,
-            _name
-        );
-
-        emit SubscriptionEdited(
-            msg.sender,
-            subscriptionNumber,
-            _subscriptionPrice,
-            true
-        );
-    }
-
-    function editSubscription(
-        uint256 id,
-        uint256 _subscriptionPrice,
-        string memory _name,
-        bool isActive
-    ) external onlyOwner {
-        subscriptions[id] = SubscriptionStruct(
-            _subscriptionPrice,
-            isActive,
-            _name
-        );
-
-        emit SubscriptionEdited(msg.sender, id, _subscriptionPrice, isActive);
-    }
-
+    /// @notice Edit the subscription manager name
+    /// @param _name New name of the subscription manager
     function setName(string memory _name) external onlyOwner {
         name = _name;
 
         emit NameEdited(msg.sender, _name);
     }
 
+    /// @notice Edit the treasury address
+    /// @param _treasury New treasury address
     function setTreasury(address _treasury) external onlyOwner {
         treasury = _treasury;
 
         emit TreasuryEdited(msg.sender, _treasury);
     }
 
+    /// @notice Edit the state of a user
+    /// @param user User to edit
+    /// @param subscriptionEndDate New subscription end date (timestamp unix seconds)
+    /// @param subscriptionId New subscription id
     function editAccount(
         address user,
         uint256 subscriptionEndDate,
-        uint256 subscriptionId
+        uint8 subscriptionId
     ) external onlyOwner {
         UserData memory _user = users[user];
 
         users[user] = UserData(
             subscriptionEndDate,
             subscriptionId,
-            _user.approval,
+            _user.subscriptionLimit,
             _user.lastPayment,
             _user.canceled
         );
@@ -423,6 +275,7 @@ contract CicleoSubscriptionManager {
         emit UserEdited(user, subscriptionId, subscriptionEndDate);
     }
 
+    /// @notice Delete the submanager
     function deleteSubManager() external onlyOwner {
         factory.security().deleteSubManager();
         selfdestruct(payable(factory.taxAccount()));

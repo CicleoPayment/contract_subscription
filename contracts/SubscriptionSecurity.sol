@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-1.0-or-later
+// SPDX-License-Identifier: CC BY-NC 2.0
 pragma solidity ^0.8.9;
 
 import "hardhat/console.sol";
@@ -7,19 +7,30 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {CicleoSubscriptionFactory} from "./SubscriptionFactory.sol";
 
+/// @title Cicleo Subscription Security
+/// @author Pol Epie
+/// @notice This contract is used to manage ownership of subscription manager
 contract CicleoSubscriptionSecurity is
     ERC721EnumerableUpgradeable,
     OwnableUpgradeable,
     ReentrancyGuardUpgradeable
 {
+    /// @notice Emitted when a new owner pass is minted
     event MintOwnerPass(address minter, uint256 subscriptionId);
 
+    /// @notice URI base of the NFTs
     string _baseTokenURI;
+
+    /// @notice nftSupply is the number of NFTs minted
     uint256 public nftSupply;
 
+    /// @notice factory Contract of the subscription factory
     CicleoSubscriptionFactory public factory;
 
+    /// @notice ownershipByNftId Mapping of the NFT id to the corresponding subscription manager id
     mapping(uint256 => uint256) public ownershipByNftId;
+
+    /// @notice ownershipBySubscriptionId Mapping of the subscription manager id to the corresponding Array of NFT id
     mapping(uint256 => uint256[]) public ownershipBySubscriptionId;
 
     function initialize() public initializer {
@@ -30,14 +41,17 @@ contract CicleoSubscriptionSecurity is
 
     //Others
 
+    /// @notice Return the URI base
     function _baseURI() internal view virtual override returns (string memory) {
         return _baseTokenURI;
     }
 
+    /// @notice Set the URI base
     function setURI(string memory _URI) external onlyOwner {
         _baseTokenURI = _URI;
     }
 
+    /// @notice Get URI of a NFT id
     function tokenURI(
         uint256 tokenId
     ) public view virtual override returns (string memory) {
@@ -50,21 +64,11 @@ contract CicleoSubscriptionSecurity is
             );
     }
 
-    //Blacklist
+    // Get functions
 
-    mapping(address => bool) public blacklist;
-
-    modifier noBlacklist(address _user) {
-        require(blacklist[_user] == false, "NFT: You are blacklisted");
-        _;
-    }
-
-    function setBlacklist(address user, bool isBlacklist) public onlyOwner {
-        blacklist[user] = isBlacklist;
-    }
-
-    /* Get functions */
-
+    /// @notice Verify if the user is admin of the subscription manager
+    /// @param _user User to verify
+    /// @param _subManagerId Id of the subscription manager
     function verifyIfOwner(
         address _user,
         uint256 _subManagerId
@@ -79,6 +83,9 @@ contract CicleoSubscriptionSecurity is
         return false;
     }
 
+    /// @notice Get the list of subscription manager id of a user
+    /// @param _user User to verify
+    /// @return Array of subscription manager ids
     function getSubManagerList(
         address _user
     ) public view returns (uint256[] memory) {
@@ -93,6 +100,9 @@ contract CicleoSubscriptionSecurity is
         return _subManagerList;
     }
 
+    /// @notice Get the first NFT id for a subscription manager id for a user
+    /// @param _user User to verify
+    /// @param _subManagerId Id of the subscription manager
     function getSubManagerTokenId(
         address _user,
         uint256 _subManagerId
@@ -108,6 +118,9 @@ contract CicleoSubscriptionSecurity is
         return 0;
     }
 
+    /// @notice Get the list of owners for a subscription manager id
+    /// @param _subManagerId Id of the subscription manager
+    /// @return Array of owners
     function getOwnersBySubmanagerId(
         uint256 _subManagerId
     ) public view returns (address[] memory) {
@@ -126,16 +139,18 @@ contract CicleoSubscriptionSecurity is
         return _owners;
     }
 
-    /* Mint Functions */
+    // Mint Functions
 
+    /// @notice Set the factory contract
+    /// @param _factory Address of the factory contract
     function setFactory(address _factory) external onlyOwner {
         factory = CicleoSubscriptionFactory(_factory);
     }
 
-    function _mintNft(
-        address _to,
-        uint256 subscriptionManagerId
-    ) internal noBlacklist(_to) {
+    /// @notice Internal Mint a new NFT
+    /// @param _to Address of the new owner
+    /// @param subscriptionManagerId Id of the subscription manager
+    function _mintNft(address _to, uint256 subscriptionManagerId) internal {
         nftSupply += 1;
         _mint(_to, nftSupply);
 
@@ -145,11 +160,15 @@ contract CicleoSubscriptionSecurity is
         emit MintOwnerPass(_to, subscriptionManagerId);
     }
 
+    /// @notice Mint a new NFT
+    /// @param _to Address of the new owner
+    /// @param subscriptionManagerId Id of the subscription manager
     function mintNft(address _to, uint256 subscriptionManagerId) external {
         require(msg.sender == address(factory), "Only factory can mint");
         _mintNft(_to, subscriptionManagerId);
     }
 
+    /// @notice Burn a NFT when the subscription manager is deleted (called by the subscription manager)
     function deleteSubManager() external {
         uint256 subscriptionId = factory.subscriptionManagerId(msg.sender);
 
