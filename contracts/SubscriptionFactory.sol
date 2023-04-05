@@ -82,13 +82,9 @@ contract CicleoSubscriptionFactory is OwnableUpgradeable {
     ) external returns (address) {
         idCount += 1;
 
-        CicleoSubscriptionManager subscription = new CicleoSubscriptionManager(
-            address(this),
-            name,
-            token,
-            treasury,
-            timerange
-        );
+        CicleoSubscriptionManager subscription = new CicleoSubscriptionManager();
+
+        subscription.initialize(name, token, treasury, timerange);
 
         security.mintNft(msg.sender, idCount);
 

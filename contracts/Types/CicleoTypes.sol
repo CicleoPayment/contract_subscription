@@ -50,6 +50,11 @@ struct UserData {
     bool canceled;
 }
 
+struct DynamicSubscriptionData {
+    string name;
+    uint256 price;
+}
+
 interface IAggregationExecutor {
     /// @notice propagates information about original msg.sender and executes arbitrary data
     function execute(address msgSender) external payable; // 0x4b64e492
@@ -75,3 +80,4 @@ interface IRouter {
         IOpenOceanCaller.CallDescription[] calldata calls
     ) external payable returns (uint returnAmount);
 }
+

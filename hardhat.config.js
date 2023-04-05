@@ -27,6 +27,7 @@ const PRIVATE_KEY = process.env.PRIVATE_KEY;
 const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY;
 const SNOWTRACE_KEY = process.env.SNOWTRACE_KEY;
 const BSC_KEY = process.env.BSC_KEY;
+const FANTOM_KEY = process.env.FANTOM_KEY;
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
 
@@ -85,6 +86,11 @@ module.exports = {
             chainId: 56,
             accounts: [`${PRIVATE_KEY}`],
         },
+        fantom: {
+            url: "https://rpcapi.fantom.network/",
+            chainId: 250,
+            accounts: [`${PRIVATE_KEY}`],
+        },
         bsbTest: {
             url: "https://bsc-testnet.public.blastapi.io",
             chainId: 97,
@@ -98,6 +104,7 @@ module.exports = {
             avalancheFujiTestnet: SNOWTRACE_KEY,
             bscTestnet: BSC_KEY,
             bsc: BSC_KEY,
+            opera: FANTOM_KEY,
         },
     },
 };

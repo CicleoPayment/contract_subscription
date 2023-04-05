@@ -73,14 +73,23 @@ contract CicleoSubscriptionManager {
         _;
     }
 
-    constructor(
-        address _factory,
+    constructor() {
+        factory = CicleoSubscriptionFactory(msg.sender);
+    }
+
+    /// @notice Initialize a subscription manager when created (called by the factory)
+    /// @param _name Name of the subscription
+    /// @param _token Token used for the subscription
+    /// @param _treasury Address of the treasury
+    /// @param _subscriptionDuration Duration of the subscription in seconds
+    function initialize(
         string memory _name,
         address _token,
         address _treasury,
         uint256 _subscriptionDuration
-    ) {
-        factory = CicleoSubscriptionFactory(_factory);
+    ) external {
+        require(msg.sender == address(factory), "Not allowed to");
+
         name = _name;
         token = IERC20(_token);
         treasury = _treasury;
@@ -178,6 +187,8 @@ contract CicleoSubscriptionManager {
         //Verify if the token have a transfer fees or if the swap goes okay
         uint256 balanceAfter = token.balanceOf(address(this));
         require(balanceAfter - balanceBefore >= price, "Swap failed");
+
+        token.transfer(routerSubscription, price);
 
         //Save subscription info
 

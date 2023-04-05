@@ -155,8 +155,6 @@ describe("Subscription Test", function () {
             .connect(account1)
             .changeSubscriptionLimit(utils.parseEther("10"));
         
-        console.log("enlfe")
-        
         await router.connect(account1).subscribe(1, 1);
 
         await router.editSubscription(

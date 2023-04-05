@@ -1,332 +1,30 @@
 {
   "manifestVersion": "3.2",
   "admin": {
-    "address": "0x083fe3Eb1cdaea74Da239A9f5cC1798e38176fF1",
-    "txHash": "0x48e7d79cb6994b261b70bd53de8c0dc252dfdc2047b4958dd355beedc88889b6"
+    "address": "0xdF963a42A2B17F6fbB1D07d3905b8E6bD0989d65",
+    "txHash": "0xa69e164efc73103d66d5212b25335fb6c2657c4e232025ef85ca0208b5a2e7e4"
   },
   "proxies": [
     {
-      "address": "0x13Cf0bD7311fEef650DC0A988bCB861F0125b075",
-      "txHash": "0xad59574e8618f9a1752e728dc9676f98f58e283ef062f638d354e78baa61eeb2",
+      "address": "0x083fe3Eb1cdaea74Da239A9f5cC1798e38176fF1",
+      "txHash": "0x13f6e457c6a358343a9e9cc4a7bfa38e5977cf38204ce27c5ed27ef21fc68630",
       "kind": "transparent"
     },
     {
-      "address": "0x7504f6E6b5eb082576D45C1F6Ca8331B34af4cF9",
-      "txHash": "0xe43109f5844ad3c398bce16b3934b51ad8d2f332fe34c0a19ddc529c61617ea3",
+      "address": "0x266B99681EC50f117976603206F0a01E048Ca891",
+      "txHash": "0x58ebde3b9a2fed86ae7b0793db3b8e87e51813f179551d52263e7d23a5aa5596",
       "kind": "transparent"
     },
     {
       "address": "0x5AE476d984eA2F1Afd844234d2eEa6f358300fF3",
-      "txHash": "0xfeef071cc1a189f21d041d2c3528b48d878229e21eade6f7cb64642db4fd5253",
-      "kind": "transparent"
-    },
-    {
-      "address": "0xFa104861500DBe04052eA3E7438151a4e0aF045B",
-      "txHash": "0x81b799f7d8b7877761f8b7a45e6d6a3377e07b44c72235583a853d90713afd70",
-      "kind": "transparent"
-    },
-    {
-      "address": "0x477ddEeD50047B9F42B7CC562C424Ca5A57D1600",
-      "txHash": "0xbb072ee5d62e67e70295f33d00997ce5b876a6ccd67d2fe8cc16f11eae8211bb",
+      "txHash": "0xd7cce0f98ee6183d7d5eefa1f934a497deb24c7b25147ccf7b876c86d7fcddcb",
       "kind": "transparent"
     }
   ],
   "impls": {
-    "4363985cb824d9003e1f1b3baaa4c3a206f8657bea74caa36bcff6c795f237f5": {
-      "address": "0xdF963a42A2B17F6fbB1D07d3905b8E6bD0989d65",
-      "txHash": "0x1e3caa0eadb4d0049c0cf411aa1b5500e3908c1638be801d24c033156edb90a9",
-      "layout": {
-        "solcVersion": "0.8.9",
-        "storage": [
-          {
-            "label": "_initialized",
-            "offset": 0,
-            "slot": "0",
-            "type": "t_uint8",
-            "contract": "Initializable",
-            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
-            "retypedFrom": "bool"
-          },
-          {
-            "label": "_initializing",
-            "offset": 1,
-            "slot": "0",
-            "type": "t_bool",
-            "contract": "Initializable",
-            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
-          },
-          {
-            "label": "__gap",
-            "offset": 0,
-            "slot": "1",
-            "type": "t_array(t_uint256)50_storage",
-            "contract": "ContextUpgradeable",
-            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
-          },
-          {
-            "label": "__gap",
-            "offset": 0,
-            "slot": "51",
-            "type": "t_array(t_uint256)50_storage",
-            "contract": "ERC165Upgradeable",
-            "src": "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol:41"
-          },
-          {
-            "label": "_name",
-            "offset": 0,
-            "slot": "101",
-            "type": "t_string_storage",
-            "contract": "ERC721Upgradeable",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol:25"
-          },
-          {
-            "label": "_symbol",
-            "offset": 0,
-            "slot": "102",
-            "type": "t_string_storage",
-            "contract": "ERC721Upgradeable",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol:28"
-          },
-          {
-            "label": "_owners",
-            "offset": 0,
-            "slot": "103",
-            "type": "t_mapping(t_uint256,t_address)",
-            "contract": "ERC721Upgradeable",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol:31"
-          },
-          {
-            "label": "_balances",
-            "offset": 0,
-            "slot": "104",
-            "type": "t_mapping(t_address,t_uint256)",
-            "contract": "ERC721Upgradeable",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol:34"
-          },
-          {
-            "label": "_tokenApprovals",
-            "offset": 0,
-            "slot": "105",
-            "type": "t_mapping(t_uint256,t_address)",
-            "contract": "ERC721Upgradeable",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol:37"
-          },
-          {
-            "label": "_operatorApprovals",
-            "offset": 0,
-            "slot": "106",
-            "type": "t_mapping(t_address,t_mapping(t_address,t_bool))",
-            "contract": "ERC721Upgradeable",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol:40"
-          },
-          {
-            "label": "__gap",
-            "offset": 0,
-            "slot": "107",
-            "type": "t_array(t_uint256)44_storage",
-            "contract": "ERC721Upgradeable",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol:517"
-          },
-          {
-            "label": "_ownedTokens",
-            "offset": 0,
-            "slot": "151",
-            "type": "t_mapping(t_address,t_mapping(t_uint256,t_uint256))",
-            "contract": "ERC721EnumerableUpgradeable",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol:22"
-          },
-          {
-            "label": "_ownedTokensIndex",
-            "offset": 0,
-            "slot": "152",
-            "type": "t_mapping(t_uint256,t_uint256)",
-            "contract": "ERC721EnumerableUpgradeable",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol:25"
-          },
-          {
-            "label": "_allTokens",
-            "offset": 0,
-            "slot": "153",
-            "type": "t_array(t_uint256)dyn_storage",
-            "contract": "ERC721EnumerableUpgradeable",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol:28"
-          },
-          {
-            "label": "_allTokensIndex",
-            "offset": 0,
-            "slot": "154",
-            "type": "t_mapping(t_uint256,t_uint256)",
-            "contract": "ERC721EnumerableUpgradeable",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol:31"
-          },
-          {
-            "label": "__gap",
-            "offset": 0,
-            "slot": "155",
-            "type": "t_array(t_uint256)46_storage",
-            "contract": "ERC721EnumerableUpgradeable",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol:171"
-          },
-          {
-            "label": "_owner",
-            "offset": 0,
-            "slot": "201",
-            "type": "t_address",
-            "contract": "OwnableUpgradeable",
-            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
-          },
-          {
-            "label": "__gap",
-            "offset": 0,
-            "slot": "202",
-            "type": "t_array(t_uint256)49_storage",
-            "contract": "OwnableUpgradeable",
-            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
-          },
-          {
-            "label": "_status",
-            "offset": 0,
-            "slot": "251",
-            "type": "t_uint256",
-            "contract": "ReentrancyGuardUpgradeable",
-            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:38"
-          },
-          {
-            "label": "__gap",
-            "offset": 0,
-            "slot": "252",
-            "type": "t_array(t_uint256)49_storage",
-            "contract": "ReentrancyGuardUpgradeable",
-            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:80"
-          },
-          {
-            "label": "_baseTokenURI",
-            "offset": 0,
-            "slot": "301",
-            "type": "t_string_storage",
-            "contract": "CicleoSubscriptionSecurity",
-            "src": "contracts/SubscriptionSecurity.sol:17"
-          },
-          {
-            "label": "nftSupply",
-            "offset": 0,
-            "slot": "302",
-            "type": "t_uint256",
-            "contract": "CicleoSubscriptionSecurity",
-            "src": "contracts/SubscriptionSecurity.sol:18"
-          },
-          {
-            "label": "factory",
-            "offset": 0,
-            "slot": "303",
-            "type": "t_contract(CicleoSubscriptionFactory)5055",
-            "contract": "CicleoSubscriptionSecurity",
-            "src": "contracts/SubscriptionSecurity.sol:20"
-          },
-          {
-            "label": "ownershipByNftId",
-            "offset": 0,
-            "slot": "304",
-            "type": "t_mapping(t_uint256,t_uint256)",
-            "contract": "CicleoSubscriptionSecurity",
-            "src": "contracts/SubscriptionSecurity.sol:22"
-          },
-          {
-            "label": "ownershipBySubscriptionId",
-            "offset": 0,
-            "slot": "305",
-            "type": "t_mapping(t_uint256,t_array(t_uint256)dyn_storage)",
-            "contract": "CicleoSubscriptionSecurity",
-            "src": "contracts/SubscriptionSecurity.sol:23"
-          },
-          {
-            "label": "blacklist",
-            "offset": 0,
-            "slot": "306",
-            "type": "t_mapping(t_address,t_bool)",
-            "contract": "CicleoSubscriptionSecurity",
-            "src": "contracts/SubscriptionSecurity.sol:55"
-          }
-        ],
-        "types": {
-          "t_address": {
-            "label": "address",
-            "numberOfBytes": "20"
-          },
-          "t_array(t_uint256)44_storage": {
-            "label": "uint256[44]",
-            "numberOfBytes": "1408"
-          },
-          "t_array(t_uint256)46_storage": {
-            "label": "uint256[46]",
-            "numberOfBytes": "1472"
-          },
-          "t_array(t_uint256)49_storage": {
-            "label": "uint256[49]",
-            "numberOfBytes": "1568"
-          },
-          "t_array(t_uint256)50_storage": {
-            "label": "uint256[50]",
-            "numberOfBytes": "1600"
-          },
-          "t_array(t_uint256)dyn_storage": {
-            "label": "uint256[]",
-            "numberOfBytes": "32"
-          },
-          "t_bool": {
-            "label": "bool",
-            "numberOfBytes": "1"
-          },
-          "t_contract(CicleoSubscriptionFactory)5055": {
-            "label": "contract CicleoSubscriptionFactory",
-            "numberOfBytes": "20"
-          },
-          "t_mapping(t_address,t_bool)": {
-            "label": "mapping(address => bool)",
-            "numberOfBytes": "32"
-          },
-          "t_mapping(t_address,t_mapping(t_address,t_bool))": {
-            "label": "mapping(address => mapping(address => bool))",
-            "numberOfBytes": "32"
-          },
-          "t_mapping(t_address,t_mapping(t_uint256,t_uint256))": {
-            "label": "mapping(address => mapping(uint256 => uint256))",
-            "numberOfBytes": "32"
-          },
-          "t_mapping(t_address,t_uint256)": {
-            "label": "mapping(address => uint256)",
-            "numberOfBytes": "32"
-          },
-          "t_mapping(t_uint256,t_address)": {
-            "label": "mapping(uint256 => address)",
-            "numberOfBytes": "32"
-          },
-          "t_mapping(t_uint256,t_array(t_uint256)dyn_storage)": {
-            "label": "mapping(uint256 => uint256[])",
-            "numberOfBytes": "32"
-          },
-          "t_mapping(t_uint256,t_uint256)": {
-            "label": "mapping(uint256 => uint256)",
-            "numberOfBytes": "32"
-          },
-          "t_string_storage": {
-            "label": "string",
-            "numberOfBytes": "32"
-          },
-          "t_uint256": {
-            "label": "uint256",
-            "numberOfBytes": "32"
-          },
-          "t_uint8": {
-            "label": "uint8",
-            "numberOfBytes": "1"
-          }
-        }
-      }
-    },
     "6cd7a4f50209f4897e61641ba6643270638a268b34a89c99330868ef5a856222": {
-      "address": "0x266B99681EC50f117976603206F0a01E048Ca891",
-      "txHash": "0x7df7411dc9461f4c07d077b73d9602a851fc427935174a285377f3ccd1260e01",
+      "address": "0xe122593c21185B17111496e27744F4130b231a75",
+      "txHash": "0xdb76643f6864d336c5daeef88641c7a479da477e20691d7a9450fe0ceffc705d",
       "layout": {
         "solcVersion": "0.8.9",
         "storage": [
@@ -609,8 +307,8 @@
       }
     },
     "77d67542497c6e52849c5b8bead3389be1e35fa3a9ed17a98bc1f519339a8085": {
-      "address": "0x858648Ba8586b0777a00EF19Cd0637E76BdA9467",
-      "txHash": "0x22faba219bddb270a6f3ca44c76229af8c3e8e67f9c897130e20126bdfffa4ab",
+      "address": "0x13Cf0bD7311fEef650DC0A988bCB861F0125b075",
+      "txHash": "0xfbf62400d8baabd5a64f712acfc78601a918df5b2b2d3378da614b1e896917b4",
       "layout": {
         "solcVersion": "0.8.9",
         "storage": [
@@ -667,7 +365,7 @@
             "label": "routerSwap",
             "offset": 0,
             "slot": "102",
-            "type": "t_contract(IRouter)6432",
+            "type": "t_contract(IRouter)4815",
             "contract": "CicleoSubscriptionFactory",
             "src": "contracts/SubscriptionFactory.sol:19"
           },
@@ -683,7 +381,7 @@
             "label": "security",
             "offset": 0,
             "slot": "104",
-            "type": "t_contract(CicleoSubscriptionSecurity)6304",
+            "type": "t_contract(CicleoSubscriptionSecurity)4687",
             "contract": "CicleoSubscriptionFactory",
             "src": "contracts/SubscriptionFactory.sol:25"
           },
@@ -721,11 +419,11 @@
             "label": "bool",
             "numberOfBytes": "1"
           },
-          "t_contract(CicleoSubscriptionSecurity)6304": {
+          "t_contract(CicleoSubscriptionSecurity)4687": {
             "label": "contract CicleoSubscriptionSecurity",
             "numberOfBytes": "20"
           },
-          "t_contract(IRouter)6432": {
+          "t_contract(IRouter)4815": {
             "label": "contract IRouter",
             "numberOfBytes": "20"
           },
@@ -749,8 +447,8 @@
       }
     },
     "535ec491830df04f1bedf713a74beae6248012d3f21ce8f572c083a817b1fb21": {
-      "address": "0x50FbE70ec44e82667CfFA0FFa8A2B7A3016e7112",
-      "txHash": "0xbcfe7bb163a51169fe9c9e85b6d9872352ff6fe5ee395f639f06a309b3836ab1",
+      "address": "0x7504f6E6b5eb082576D45C1F6Ca8331B34af4cF9",
+      "txHash": "0x5384b89bfb4eae10fa9fa2ee8837bd11b2bdea32a2bfbf832c0ef79ae33ef535",
       "layout": {
         "solcVersion": "0.8.9",
         "storage": [
@@ -950,6 +648,286 @@
           "t_uint16": {
             "label": "uint16",
             "numberOfBytes": "2"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    },
+    "7bca9fc641982149d1cca5bb538d755eb4f7c2512ceee80948061de7183b546f": {
+      "address": "0x8b777ab81f701164B11A4f25c9B9ca85998BF15B",
+      "txHash": "0x76675fbc61c3d58fd9455099941e6ada57f43adb6fd900146cef5aed4f4321e8",
+      "layout": {
+        "solcVersion": "0.8.9",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "idCount",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_uint256",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:16"
+          },
+          {
+            "label": "routerSwap",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_contract(IRouter)6439",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:19"
+          },
+          {
+            "label": "routerSubscription",
+            "offset": 0,
+            "slot": "103",
+            "type": "t_address",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:22"
+          },
+          {
+            "label": "security",
+            "offset": 0,
+            "slot": "104",
+            "type": "t_contract(CicleoSubscriptionSecurity)6311",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:25"
+          },
+          {
+            "label": "ids",
+            "offset": 0,
+            "slot": "105",
+            "type": "t_mapping(t_uint256,t_address)",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:28"
+          },
+          {
+            "label": "subscriptionManagerId",
+            "offset": 0,
+            "slot": "106",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:31"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_contract(CicleoSubscriptionSecurity)6311": {
+            "label": "contract CicleoSubscriptionSecurity",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IRouter)6439": {
+            "label": "contract IRouter",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_address)": {
+            "label": "mapping(uint256 => address)",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    },
+    "b6d213be85501a1bcd5d040241cf6dc79373b1d94bd2eee3e57e165e2caa87ef": {
+      "address": "0x309907e95BFB62623B3b31001540F4f126Feb03B",
+      "txHash": "0x5daeda887451738a38d953e6bbebbea188af9aaf74eecc1c3c0e6ad593d9cda6",
+      "layout": {
+        "solcVersion": "0.8.9",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "idCount",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_uint256",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:16"
+          },
+          {
+            "label": "routerSwap",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_contract(IRouter)6455",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:19"
+          },
+          {
+            "label": "routerSubscription",
+            "offset": 0,
+            "slot": "103",
+            "type": "t_address",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:22"
+          },
+          {
+            "label": "security",
+            "offset": 0,
+            "slot": "104",
+            "type": "t_contract(CicleoSubscriptionSecurity)6327",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:25"
+          },
+          {
+            "label": "ids",
+            "offset": 0,
+            "slot": "105",
+            "type": "t_mapping(t_uint256,t_address)",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:28"
+          },
+          {
+            "label": "subscriptionManagerId",
+            "offset": 0,
+            "slot": "106",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:31"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_contract(CicleoSubscriptionSecurity)6327": {
+            "label": "contract CicleoSubscriptionSecurity",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IRouter)6455": {
+            "label": "contract IRouter",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_address)": {
+            "label": "mapping(uint256 => address)",
+            "numberOfBytes": "32"
           },
           "t_uint256": {
             "label": "uint256",
