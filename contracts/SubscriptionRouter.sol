@@ -43,34 +43,34 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
 
     /// @notice Event when a user pays for a subscription (first time or even renewing)
     event PaymentSubscription(
-        address indexed user,
         uint256 indexed subscrptionManagerId,
+        address indexed user,
         uint8 indexed subscriptionId,
         uint256 price
     );
 
     /// @notice Event when a user subscription state is changed (after a payment or via an admin)
     event UserEdited(
-        address indexed user,
         uint256 indexed subscrptionManagerId,
+        address indexed user,
         uint8 indexed subscriptionId,
         uint256 endDate
     );
 
     /// @notice Event when an admin change a subscription state
     event SubscriptionEdited(
-        address indexed user,
         uint256 indexed subscrptionManagerId,
+        address indexed user,
         uint8 indexed subscriptionId,
         uint256 price,
         bool isActive
     );
     /// @notice Event when an admin change the treasury address
-    event TreasuryEdited(address indexed user, address newTreasury);
+    event TreasuryEdited(uint256 indexed SubscriptionManagerId, address indexed user, address newTreasury);
     /// @notice Event when an admin change the submanager name
-    event NameEdited(address indexed user, string newName);
+    event NameEdited(uint256 indexed SubscriptionManagerId, address indexed user, string newName);
     /// @notice Event when an user select a token to pay for his subscription (when he pay first time to then store the selected coin)
-    event SelectToken(address indexed user, address indexed tokenAddress);
+    event SelectToken(uint256 indexed SubscriptionManagerId, address indexed user, address indexed tokenAddress);
 
     /// @notice Verify if user have ownerpass for assoicated submanager
     /// @param id Id of the submanager
@@ -120,26 +120,26 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
 
     /// @notice Internal function to process the payment of the subscription with the submanager token
     /// @param subscriptionManagerId Id of the submanager
-    /// @param subscrptionId Id of the subscription
+    /// @param subscriptionId Id of the subscription
     /// @param user User address to pay for the subscription
     /// @param price Price of the subscription (in wei in the submanager token)
     /// @param endDate End date of the subscription (unix timestamp)
     function payFunction(
         uint256 subscriptionManagerId,
-        uint8 subscrptionId,
+        uint8 subscriptionId,
         address user,
         uint256 price,
         uint256 endDate
     ) internal {
         require(
-            (subscrptionId > 0 &&
-                subscrptionId <= subscriptionNumber[subscriptionManagerId]) ||
+            (subscriptionId > 0 &&
+                subscriptionId <= subscriptionNumber[subscriptionManagerId]) ||
                 subscriptionManagerId == 255,
             "Wrong sub type"
         );
 
         require(
-            subscriptions[subscriptionManagerId][subscrptionId].isActive,
+            subscriptions[subscriptionManagerId][subscriptionId].isActive,
             "Subscription is disabled"
         );
 
@@ -147,16 +147,18 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
             factory.ids(subscriptionManagerId)
         );
 
-        manager.payFunctionWithSubToken(user, subscrptionId, price, endDate);
+        manager.payFunctionWithSubToken(user, subscriptionId, price, endDate);
 
         redistributeToken(price, manager);
 
         emit PaymentSubscription(
-            user,
             subscriptionManagerId,
-            subscrptionId,
+            user,
+            subscriptionId,
             price
         );
+
+        emit UserEdited(subscriptionManagerId, user, subscriptionId, endDate);
     }
 
     /// @notice Internal function to process the payment of the subscription with swaped token
@@ -206,11 +208,13 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         redistributeToken(price, manager);
 
         emit PaymentSubscription(
-            user,
             subscriptionManagerId,
+            user,
             subscriptionId,
             price
         );
+
+        emit UserEdited(subscriptionManagerId, user, subscriptionId, endDate);
     }
 
     //Subscription functions
@@ -239,38 +243,38 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
             block.timestamp + manager.subscriptionDuration()
         );
 
-        emit SelectToken(msg.sender, manager.tokenAddress());
+        emit SelectToken(subscriptionManagerId, msg.sender, manager.tokenAddress());
     }
 
     /// @notice Function to subscribe to a subscription with the swapped token
-    /// @param subscriptionId Id of the submanager
-    /// @param subscrptionType Id of the subscription
+    /// @param subscriptionManagerId Id of the submanager
+    /// @param subscrptionId Id of the subscription
     /// @param executor Executor contract (OpenOcean part)
     /// @param desc Swap description (OpenOcean part)
     /// @param calls Calls to execute (OpenOcean part)
     function subscribeWithSwap(
-        uint256 subscriptionId,
-        uint8 subscrptionType,
+        uint256 subscriptionManagerId,
+        uint8 subscrptionId,
         IOpenOceanCaller executor,
         SwapDescription memory desc,
         IOpenOceanCaller.CallDescription[] calldata calls
     ) external {
         require(
-            subscrptionType > 0 &&
-                subscrptionType <= subscriptionNumber[subscriptionId],
+            subscrptionId > 0 &&
+                subscrptionId <= subscriptionNumber[subscriptionManagerId],
             "Wrong sub type"
         );
         CicleoSubscriptionManager manager = CicleoSubscriptionManager(
-            factory.ids(subscriptionId)
+            factory.ids(subscriptionManagerId)
         );
 
-        SubscriptionStruct memory sub = subscriptions[subscriptionId][
-            subscrptionType
+        SubscriptionStruct memory sub = subscriptions[subscriptionManagerId][
+            subscrptionId
         ];
 
         payFunctionWithSwap(
-            subscriptionId,
-            subscrptionType,
+            subscriptionManagerId,
+            subscrptionId,
             executor,
             desc,
             calls,
@@ -279,26 +283,26 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
             block.timestamp + manager.subscriptionDuration()
         );
 
-        emit SelectToken(msg.sender, address(desc.srcToken));
+        emit SelectToken(subscriptionManagerId, msg.sender, address(desc.srcToken));
     }
 
     //Dynamic subscriptions functions
 
     /// @notice Function to subscribe with a given price and name
-    /// @param subscriptionId Id of the submanager
+    /// @param subscriptionManagerId Id of the submanager
     /// @param subscrptionName Name of the subscription
     /// @param price Price of the subscription
     function subscribeDynamicly(
-        uint256 subscriptionId,
+        uint256 subscriptionManagerId,
         string calldata subscrptionName,
         uint256 price
     ) external {
         CicleoSubscriptionManager manager = CicleoSubscriptionManager(
-            factory.ids(subscriptionId)
+            factory.ids(subscriptionManagerId)
         );
 
         payFunction(
-            subscriptionId,
+            subscriptionManagerId,
             255,
             msg.sender,
             price,
@@ -307,18 +311,18 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
 
         users[msg.sender] = DynamicSubscriptionData(subscrptionName, price);
 
-        emit SelectToken(msg.sender, manager.tokenAddress());
+        emit SelectToken(subscriptionManagerId, msg.sender, manager.tokenAddress());
     }
 
     /// @notice Function to subscribe with a given price and name with swap
-    /// @param subscriptionId Id of the submanager
+    /// @param subscriptionManagerId Id of the submanager
     /// @param subscrptionName Name of the subscription
     /// @param price Price of the subscription
     /// @param executor Executor contract (OpenOcean part)
     /// @param desc Swap description (OpenOcean part)
     /// @param calls Calls to execute (OpenOcean part)
     function subscribeDynamiclyWithSwap(
-        uint256 subscriptionId,
+        uint256 subscriptionManagerId,
         string calldata subscrptionName,
         uint256 price,
         IOpenOceanCaller executor,
@@ -326,11 +330,11 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         IOpenOceanCaller.CallDescription[] calldata calls
     ) external {
         CicleoSubscriptionManager manager = CicleoSubscriptionManager(
-            factory.ids(subscriptionId)
+            factory.ids(subscriptionManagerId)
         );
 
         payFunctionWithSwap(
-            subscriptionId,
+            subscriptionManagerId,
             255,
             executor,
             desc,
@@ -342,7 +346,7 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
 
         users[msg.sender] = DynamicSubscriptionData(subscrptionName, price);
 
-        emit SelectToken(msg.sender, address(desc.srcToken));
+        emit SelectToken(subscriptionManagerId, msg.sender, address(desc.srcToken));
     }
 
     /// @notice Function to renew a subscription with the submanager token (only for the bot)
@@ -447,8 +451,8 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         ] = SubscriptionStruct(price, true, name);
 
         emit SubscriptionEdited(
-            msg.sender,
             subscriptionManagerId,
+            msg.sender,
             subscriptionNumber[subscriptionManagerId],
             price,
             true
@@ -475,12 +479,73 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         );
 
         emit SubscriptionEdited(
-            msg.sender,
             subscriptionManagerId,
+            msg.sender,
             id,
             price,
             isActive
         );
+    }
+
+    /// @notice Function to update a user state (admin only)
+    /// @param subscriptionManagerId Id of the submanager
+    /// @param user User address to update
+    /// @param subscriptionEndDate New subscription end date
+    /// @param subscriptionId New subscription id
+    function editAccount(
+        uint256 subscriptionManagerId,
+        address user,
+        uint256 subscriptionEndDate,
+        uint8 subscriptionId
+    ) external onlySubOwner(subscriptionManagerId) {
+        CicleoSubscriptionManager subManager = CicleoSubscriptionManager(
+            factory.ids(subscriptionManagerId)
+        );
+
+        subManager.editAccount(
+            user,
+            subscriptionEndDate,
+            subscriptionId
+        );
+
+        emit UserEdited(
+            subscriptionManagerId,
+            user,
+            subscriptionId,
+            subscriptionEndDate
+        );
+    }
+
+    /// @notice Function to set the treasury of the submanager (admin only)
+    /// @param subscriptionManagerId Id of the submanager
+    /// @param treasury New treasury address
+    function setTreasury(
+        uint256 subscriptionManagerId,address treasury) external onlyOwner {
+        CicleoSubscriptionManager subManager = CicleoSubscriptionManager(
+            factory.ids(subscriptionManagerId)
+        );
+
+        subManager.setTreasury(
+            treasury
+        );
+
+        emit TreasuryEdited(subscriptionManagerId, msg.sender, treasury);
+    }
+
+    /// @notice Function to change the name of the submanager (admin only)
+    /// @param subscriptionManagerId Id of the submanager
+    /// @param name New submanager name
+    function setName(
+        uint256 subscriptionManagerId,string memory name) external onlyOwner {
+        CicleoSubscriptionManager subManager = CicleoSubscriptionManager(
+            factory.ids(subscriptionManagerId)
+        );
+
+        subManager.setName(
+            name
+        );
+
+        emit NameEdited(subscriptionManagerId, msg.sender, name);
     }
 
     //Get functions
@@ -601,4 +666,5 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         require(_taxPercentage <= 1000, "Tax rate must be less than 1000");
         taxPercentage = _taxPercentage;
     }
+
 }

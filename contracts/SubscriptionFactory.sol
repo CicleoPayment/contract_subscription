@@ -33,7 +33,8 @@ contract CicleoSubscriptionFactory is OwnableUpgradeable {
     /// @notice Emitted when a new subscription manager is created
     event SubscriptionManagerCreated(
         address creator,
-        address indexed subscriptionAddress
+        address indexed subscriptionManagerAddress,
+        uint256 indexed subscriptionManagerId
     );
 
     function initialize(address _security) public initializer {
@@ -88,7 +89,7 @@ contract CicleoSubscriptionFactory is OwnableUpgradeable {
 
         security.mintNft(msg.sender, idCount);
 
-        emit SubscriptionManagerCreated(msg.sender, address(subscription));
+        emit SubscriptionManagerCreated(msg.sender, address(subscription), idCount);
 
         ids[idCount] = address(subscription);
 

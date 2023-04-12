@@ -16,14 +16,14 @@ contract CicleoSubscriptionManager {
     /// @notice token Token used for the subscription
     IERC20 public token;
 
-    /// @notice treasury Address of the treasury
-    address public treasury;
-
     /// @notice factory Address of the subscription factory
     CicleoSubscriptionFactory public factory;
 
     /// @notice name Name of the subscription
     string public name;
+
+    /// @notice treasury Address of the treasury
+    address public treasury;
 
     /// @notice subscriptionNumber Count of subscriptions
     uint256 public subscriptionNumber;
@@ -55,12 +55,6 @@ contract CicleoSubscriptionManager {
         bool isActive
     );
 
-    /// @notice Event when treasury is edited
-    event TreasuryEdited(address indexed user, address newTreasury);
-
-    /// @notice Event when name is edited
-    event NameEdited(address indexed user, string newName);
-
     /// @notice Verify if the user is admin of the subscription manager
     modifier onlyOwner() {
         require(
@@ -70,6 +64,11 @@ contract CicleoSubscriptionManager {
             ),
             "Not allowed to"
         );
+        _;
+    }
+
+    modifier onlyRouter() {
+        require(msg.sender == factory.routerSubscription(), "Not allowed to");
         _;
     }
 
@@ -116,9 +115,14 @@ contract CicleoSubscriptionManager {
         uint256 endDate
     ) external {
         address routerSubscription = factory.routerSubscription();
-
         require(msg.sender == routerSubscription, "Not allowed to");
+
         require(users[user].canceled == false, "Subscription is canceled");
+
+        require(
+            users[user].lastPayment < block.timestamp - subscriptionDuration,
+            "You cannot pay twice in the same period"
+        );
 
         //Verify subscription limit
         require(
@@ -164,7 +168,13 @@ contract CicleoSubscriptionManager {
     ) external {
         address routerSubscription = factory.routerSubscription();
         require(msg.sender == routerSubscription, "Not allowed to");
+
         require(users[user].canceled == false, "Subscription is canceled");
+
+        require(
+            users[user].lastPayment < block.timestamp - subscriptionDuration,
+            "You cannot pay twice in the same period"
+        );
 
         //Verify subscription limit
         require(
@@ -188,7 +198,7 @@ contract CicleoSubscriptionManager {
         uint256 balanceAfter = token.balanceOf(address(this));
         require(balanceAfter - balanceBefore >= price, "Swap failed");
 
-        token.transfer(routerSubscription, price);
+        token.transfer(routerSubscription, balanceAfter);
 
         //Save subscription info
 
@@ -250,18 +260,16 @@ contract CicleoSubscriptionManager {
 
     /// @notice Edit the subscription manager name
     /// @param _name New name of the subscription manager
-    function setName(string memory _name) external onlyOwner {
+    function setName(string memory _name) external {
+        require(msg.sender == factory.routerSubscription(), "Not allowed to");
         name = _name;
-
-        emit NameEdited(msg.sender, _name);
     }
 
     /// @notice Edit the treasury address
     /// @param _treasury New treasury address
-    function setTreasury(address _treasury) external onlyOwner {
+    function setTreasury(address _treasury) external {
+        require(msg.sender == factory.routerSubscription(), "Not allowed to");
         treasury = _treasury;
-
-        emit TreasuryEdited(msg.sender, _treasury);
     }
 
     /// @notice Edit the state of a user
@@ -272,7 +280,9 @@ contract CicleoSubscriptionManager {
         address user,
         uint256 subscriptionEndDate,
         uint8 subscriptionId
-    ) external onlyOwner {
+    ) external {
+        require(msg.sender == factory.routerSubscription(), "Not allowed to");
+
         UserData memory _user = users[user];
 
         users[user] = UserData(
@@ -282,8 +292,6 @@ contract CicleoSubscriptionManager {
             _user.lastPayment,
             _user.canceled
         );
-
-        emit UserEdited(user, subscriptionId, subscriptionEndDate);
     }
 
     /// @notice Delete the submanager
