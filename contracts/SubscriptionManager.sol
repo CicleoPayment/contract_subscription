@@ -40,7 +40,7 @@ contract CicleoSubscriptionManager {
     /// @notice Event when a user subscription state is changed (after a payment or via an admin)
     event UserEdited(
         address indexed user,
-        uint256 indexed subscrptionId,
+        uint256 indexed subscriptionId,
         uint256 endDate
     );
 
@@ -50,7 +50,7 @@ contract CicleoSubscriptionManager {
     /// @notice Event when a user subscription is edited
     event SubscriptionEdited(
         address indexed user,
-        uint256 indexed subscrptionId,
+        uint256 indexed subscriptionId,
         uint256 price,
         bool isActive
     );
@@ -103,14 +103,14 @@ contract CicleoSubscriptionManager {
         emit EditSubscriptionLimit(msg.sender, amountMaxPerPeriod);
     }
 
-    /// @notice Function to pay subscription with submanger token
+    /// @notice Function to pay subscription with submanager token
     /// @param user User to pay the subscription
-    /// @param subscrptionId Id of the subscription
+    /// @param subscriptionId Id of the subscription
     /// @param price Price of the subscription
     /// @param endDate End date of the subscription
     function payFunctionWithSubToken(
         address user,
-        uint8 subscrptionId,
+        uint8 subscriptionId,
         uint256 price,
         uint256 endDate
     ) external {
@@ -144,7 +144,7 @@ contract CicleoSubscriptionManager {
         //Save subscription info
 
         users[user].subscriptionEndDate = endDate;
-        users[user].subscriptionId = subscrptionId;
+        users[user].subscriptionId = subscriptionId;
         users[user].lastPayment = block.timestamp;
         users[user].canceled = false;
     }
@@ -154,7 +154,7 @@ contract CicleoSubscriptionManager {
     /// @param executor Executor of the swap (OpenOcean)
     /// @param desc Description of the swap (OpenOcean)
     /// @param calls Calls of the swap (OpenOcean)
-    /// @param subscrptionId Id of the subscription
+    /// @param subscriptionId Id of the subscription
     /// @param price Price of the subscription
     /// @param endDate End date of the subscription
     function payFunctionWithSwap(
@@ -162,7 +162,7 @@ contract CicleoSubscriptionManager {
         IOpenOceanCaller executor,
         SwapDescription memory desc,
         IOpenOceanCaller.CallDescription[] calldata calls,
-        uint8 subscrptionId,
+        uint8 subscriptionId,
         uint256 price,
         uint256 endDate
     ) external {
@@ -203,7 +203,7 @@ contract CicleoSubscriptionManager {
         //Save subscription info
 
         users[user].subscriptionEndDate = endDate;
-        users[user].subscriptionId = subscrptionId;
+        users[user].subscriptionId = subscriptionId;
         users[user].lastPayment = block.timestamp;
         users[user].canceled = false;
     }
@@ -287,6 +287,41 @@ contract CicleoSubscriptionManager {
 
         users[user] = UserData(
             subscriptionEndDate,
+            subscriptionId,
+            _user.subscriptionLimit,
+            _user.lastPayment,
+            _user.canceled
+        );
+    }
+
+    /// @notice Function to change subscription type and pay the difference for the actual period
+    /// @param user User to edit
+    /// @param oldPrice Price of the old subscription
+    /// @param newPrice Price of the new subscription
+    /// @param subscriptionId New subscription id
+    function changeSubscription(
+        address user,
+        uint256 oldPrice,
+        uint256 newPrice,
+        uint8 subscriptionId
+    ) external {
+        address routerSubscription = factory.routerSubscription();
+        require(msg.sender == routerSubscription, "Not allowed to");
+
+        UserData memory _user = users[user];
+
+        // Compute the price to be paid to regulate
+        uint256 currentTime = block.timestamp;
+        uint256 timeToNextPayment = (_user.lastPayment + subscriptionDuration) -
+            currentTime;
+        uint256 priceAdjusted = ((newPrice - oldPrice) / subscriptionDuration) *
+            timeToNextPayment;
+
+        token.transferFrom(user, routerSubscription, priceAdjusted);
+
+        //Change the id of subscription
+        users[user] = UserData(
+            _user.subscriptionEndDate,
             subscriptionId,
             _user.subscriptionLimit,
             _user.lastPayment,

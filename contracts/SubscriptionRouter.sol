@@ -43,7 +43,7 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
 
     /// @notice Event when a user pays for a subscription (first time or even renewing)
     event PaymentSubscription(
-        uint256 indexed subscrptionManagerId,
+        uint256 indexed subscriptionManagerId,
         address indexed user,
         uint8 indexed subscriptionId,
         uint256 price
@@ -51,7 +51,7 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
 
     /// @notice Event when a user subscription state is changed (after a payment or via an admin)
     event UserEdited(
-        uint256 indexed subscrptionManagerId,
+        uint256 indexed subscriptionManagerId,
         address indexed user,
         uint8 indexed subscriptionId,
         uint256 endDate
@@ -66,11 +66,23 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         bool isActive
     );
     /// @notice Event when an admin change the treasury address
-    event TreasuryEdited(uint256 indexed SubscriptionManagerId, address indexed user, address newTreasury);
+    event TreasuryEdited(
+        uint256 indexed SubscriptionManagerId,
+        address indexed user,
+        address newTreasury
+    );
     /// @notice Event when an admin change the submanager name
-    event NameEdited(uint256 indexed SubscriptionManagerId, address indexed user, string newName);
+    event NameEdited(
+        uint256 indexed SubscriptionManagerId,
+        address indexed user,
+        string newName
+    );
     /// @notice Event when an user select a token to pay for his subscription (when he pay first time to then store the selected coin)
-    event SelectToken(uint256 indexed SubscriptionManagerId, address indexed user, address indexed tokenAddress);
+    event SelectToken(
+        uint256 indexed SubscriptionManagerId,
+        address indexed user,
+        address indexed tokenAddress
+    );
 
     /// @notice Verify if user have ownerpass for assoicated submanager
     /// @param id Id of the submanager
@@ -243,7 +255,11 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
             block.timestamp + manager.subscriptionDuration()
         );
 
-        emit SelectToken(subscriptionManagerId, msg.sender, manager.tokenAddress());
+        emit SelectToken(
+            subscriptionManagerId,
+            msg.sender,
+            manager.tokenAddress()
+        );
     }
 
     /// @notice Function to subscribe to a subscription with the swapped token
@@ -283,7 +299,11 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
             block.timestamp + manager.subscriptionDuration()
         );
 
-        emit SelectToken(subscriptionManagerId, msg.sender, address(desc.srcToken));
+        emit SelectToken(
+            subscriptionManagerId,
+            msg.sender,
+            address(desc.srcToken)
+        );
     }
 
     //Dynamic subscriptions functions
@@ -311,7 +331,11 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
 
         users[msg.sender] = DynamicSubscriptionData(subscrptionName, price);
 
-        emit SelectToken(subscriptionManagerId, msg.sender, manager.tokenAddress());
+        emit SelectToken(
+            subscriptionManagerId,
+            msg.sender,
+            manager.tokenAddress()
+        );
     }
 
     /// @notice Function to subscribe with a given price and name with swap
@@ -346,7 +370,11 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
 
         users[msg.sender] = DynamicSubscriptionData(subscrptionName, price);
 
-        emit SelectToken(subscriptionManagerId, msg.sender, address(desc.srcToken));
+        emit SelectToken(
+            subscriptionManagerId,
+            msg.sender,
+            address(desc.srcToken)
+        );
     }
 
     /// @notice Function to renew a subscription with the submanager token (only for the bot)
@@ -432,6 +460,44 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         );
     }
 
+    /// @notice Function to change subscription type
+    /// @param subscriptionManagerId Id of the submanager
+    /// @param oldSubscriptionId Id of the old subscription
+    /// @param newSubscriptionId Id of the new subscription
+    /// @param user User address to pay for the subscription
+    /// @param newPrice Price of the subscription (in wei in the submanager token)
+    function changeSubscription(
+        uint256 subscriptionManagerId,
+        uint8 oldSubscriptionId,
+        uint8 newSubscriptionId,
+        address user,
+        uint256 newPrice
+    ) external {
+        require(
+            oldSubscriptionId != 0 && oldSubscriptionId != 255,
+            "Invalid Id !"
+        );
+        require(
+            newSubscriptionId != 0 && newSubscriptionId != 255,
+            "Invalid Id !"
+        );
+
+        CicleoSubscriptionManager subManager = CicleoSubscriptionManager(
+            factory.ids(subscriptionManagerId)
+        );
+
+        uint256 oldPrice = subscriptions[subscriptionManagerId][
+            oldSubscriptionId
+        ].price;
+
+        subManager.changeSubscription(
+            user,
+            oldPrice,
+            newPrice,
+            newSubscriptionId
+        );
+    }
+
     //SubManager Admin functions
 
     /// @notice Function to create a new subscription (admin only)
@@ -502,11 +568,7 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
             factory.ids(subscriptionManagerId)
         );
 
-        subManager.editAccount(
-            user,
-            subscriptionEndDate,
-            subscriptionId
-        );
+        subManager.editAccount(user, subscriptionEndDate, subscriptionId);
 
         emit UserEdited(
             subscriptionManagerId,
@@ -520,14 +582,14 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
     /// @param subscriptionManagerId Id of the submanager
     /// @param treasury New treasury address
     function setTreasury(
-        uint256 subscriptionManagerId,address treasury) external onlyOwner {
+        uint256 subscriptionManagerId,
+        address treasury
+    ) external onlyOwner {
         CicleoSubscriptionManager subManager = CicleoSubscriptionManager(
             factory.ids(subscriptionManagerId)
         );
 
-        subManager.setTreasury(
-            treasury
-        );
+        subManager.setTreasury(treasury);
 
         emit TreasuryEdited(subscriptionManagerId, msg.sender, treasury);
     }
@@ -536,14 +598,14 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
     /// @param subscriptionManagerId Id of the submanager
     /// @param name New submanager name
     function setName(
-        uint256 subscriptionManagerId,string memory name) external onlyOwner {
+        uint256 subscriptionManagerId,
+        string memory name
+    ) external onlyOwner {
         CicleoSubscriptionManager subManager = CicleoSubscriptionManager(
             factory.ids(subscriptionManagerId)
         );
 
-        subManager.setName(
-            name
-        );
+        subManager.setName(name);
 
         emit NameEdited(subscriptionManagerId, msg.sender, name);
     }
@@ -583,6 +645,7 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
     /// @notice Function to get every submanager that the user have access to (with ownerpass)
     /// @param user User address
     /// @return subManagers Array of submanagers
+    // @audit-info Potentiel risque de DoS avec la boucle for ??
     function getSubscriptionsManager(
         address user
     ) external view returns (MinimifiedSubscriptionManagerStruct[] memory) {
@@ -666,5 +729,4 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         require(_taxPercentage <= 1000, "Tax rate must be less than 1000");
         taxPercentage = _taxPercentage;
     }
-
 }
