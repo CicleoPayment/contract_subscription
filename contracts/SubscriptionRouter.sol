@@ -41,6 +41,9 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
     /// @notice Mapping to store the dynamic subscription info for each user
     mapping(address => DynamicSubscriptionData) public users;
 
+    /// @notice Address of the LiFi executor
+    address public bridgeExecutor;
+
     /// @notice Event when a user pays for a subscription (first time or even renewing)
     event PaymentSubscription(
         uint256 indexed subscriptionManagerId,
@@ -498,6 +501,40 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         );
     }
 
+
+    //Bridge subscription part
+
+    function subscribeWithBridge(address user, uint256 subscriptionManagerId, uint8 subscriptionId) external {
+        require(msg.sender == bridgeExecutor, "Not allowed");
+
+        CicleoSubscriptionManager subManager = CicleoSubscriptionManager(
+            factory.ids(subscriptionManagerId)
+        );
+
+        IERC20 token = IERC20(subManager.tokenAddress());
+
+        uint256 price = token.allowance(bridgeExecutor, address(this));
+
+        token.transferFrom(bridgeExecutor, address(this), price);
+
+        redistributeToken(price, subManager);
+
+        uint256 subscriptionEndDate = block.timestamp + subManager.subscriptionDuration();
+
+        subManager.editAccount(
+            user,
+            subscriptionEndDate,
+            subscriptionId
+        );
+
+        emit UserEdited(
+            subscriptionManagerId,
+            user,
+            subscriptionId,
+            subscriptionEndDate
+        );
+    }
+
     //SubManager Admin functions
 
     /// @notice Function to create a new subscription (admin only)
@@ -728,5 +765,9 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
     function setTaxRate(uint16 _taxPercentage) external onlyOwner {
         require(_taxPercentage <= 1000, "Tax rate must be less than 1000");
         taxPercentage = _taxPercentage;
+    }
+
+    function setBridgeExectuor(address _bridgeExecutor) external onlyOwner {
+        bridgeExecutor = _bridgeExecutor;
     }
 }
