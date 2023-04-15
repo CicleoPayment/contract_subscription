@@ -465,17 +465,19 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
 
     /// @notice Function to change subscription type
     /// @param subscriptionManagerId Id of the submanager
-    /// @param oldSubscriptionId Id of the old subscription
     /// @param newSubscriptionId Id of the new subscription
-    /// @param user User address to pay for the subscription
-    /// @param newPrice Price of the subscription (in wei in the submanager token)
     function changeSubscription(
         uint256 subscriptionManagerId,
-        uint8 oldSubscriptionId,
-        uint8 newSubscriptionId,
-        address user,
-        uint256 newPrice
+        uint8 newSubscriptionId
     ) external {
+        CicleoSubscriptionManager subManager = CicleoSubscriptionManager(
+            factory.ids(subscriptionManagerId)
+        );
+
+        (uint256 enddate,uint256 oldSubscriptionId,,,) = subManager.users(msg.sender);
+
+        require(enddate > block.timestamp, "You don't have an actual subscriptions");
+
         require(
             oldSubscriptionId != 0 && oldSubscriptionId != 255,
             "Invalid Id !"
@@ -485,20 +487,38 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
             "Invalid Id !"
         );
 
-        CicleoSubscriptionManager subManager = CicleoSubscriptionManager(
-            factory.ids(subscriptionManagerId)
-        );
+        uint256 newPrice = subscriptions[subscriptionManagerId][
+            newSubscriptionId
+        ].price;
 
         uint256 oldPrice = subscriptions[subscriptionManagerId][
             oldSubscriptionId
         ].price;
 
-        subManager.changeSubscription(
-            user,
+        uint256 difference = subManager.changeSubscription(
+            msg.sender,
             oldPrice,
             newPrice,
             newSubscriptionId
         );
+
+        emit UserEdited(
+            subscriptionManagerId,
+            msg.sender,
+            newSubscriptionId,
+            enddate
+        );
+
+        if (difference > 0) {
+            redistributeToken(difference, subManager);
+
+            emit PaymentSubscription(
+                subscriptionManagerId,
+                msg.sender,
+                newSubscriptionId,
+                difference
+            );
+        }
     }
 
 

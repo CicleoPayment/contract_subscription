@@ -304,20 +304,22 @@ contract CicleoSubscriptionManager {
         uint256 oldPrice,
         uint256 newPrice,
         uint8 subscriptionId
-    ) external {
+    ) external returns (uint256){
         address routerSubscription = factory.routerSubscription();
         require(msg.sender == routerSubscription, "Not allowed to");
 
         UserData memory _user = users[user];
 
-        // Compute the price to be paid to regulate
-        uint256 currentTime = block.timestamp;
-        uint256 timeToNextPayment = (_user.lastPayment + subscriptionDuration) -
-            currentTime;
-        uint256 priceAdjusted = ((newPrice - oldPrice) / subscriptionDuration) *
-            timeToNextPayment;
+        if (newPrice > oldPrice) {
+            // Compute the price to be paid to regulate
+            uint256 currentTime = block.timestamp;
+            uint256 timeToNextPayment = (_user.lastPayment + subscriptionDuration) -
+                currentTime;
+            uint256 priceAdjusted = ((newPrice - oldPrice) / subscriptionDuration) *
+                timeToNextPayment;
 
-        token.transferFrom(user, routerSubscription, priceAdjusted);
+            token.transferFrom(user, routerSubscription, priceAdjusted);
+        }
 
         //Change the id of subscription
         users[user] = UserData(
@@ -327,6 +329,8 @@ contract CicleoSubscriptionManager {
             _user.lastPayment,
             _user.canceled
         );
+
+        return newPrice > oldPrice ? (newPrice - oldPrice) : 0;
     }
 
     /// @notice Delete the submanager
