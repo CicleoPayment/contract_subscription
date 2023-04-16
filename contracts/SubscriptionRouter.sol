@@ -62,7 +62,7 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
 
     /// @notice Event when an admin change a subscription state
     event SubscriptionEdited(
-        uint256 indexed subscrptionManagerId,
+        uint256 indexed subscriptionManagerId,
         address indexed user,
         uint8 indexed subscriptionId,
         uint256 price,
@@ -146,17 +146,13 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         uint256 price,
         uint256 endDate
     ) internal {
-        require(
-            (subscriptionId > 0 &&
-                subscriptionId <= subscriptionNumber[subscriptionManagerId]) ||
-                subscriptionManagerId == 255,
-            "Wrong sub type"
-        );
-
-        require(
-            subscriptions[subscriptionManagerId][subscriptionId].isActive,
-            "Subscription is disabled"
-        );
+        //Avoid verify if subscription is active if it's a dynamic subscription
+        if (subscriptionId != 255) {
+            require(
+                subscriptions[subscriptionManagerId][subscriptionId].isActive,
+                "Subscription is disabled"
+            );
+        }
 
         CicleoSubscriptionManager manager = CicleoSubscriptionManager(
             factory.ids(subscriptionManagerId)
@@ -195,16 +191,13 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         uint256 price,
         uint256 endDate
     ) internal {
-        require(
-            (subscriptionId > 0 &&
-                subscriptionId <= subscriptionNumber[subscriptionManagerId]) ||
-                subscriptionId == 255,
-            "Wrong sub type"
-        );
-        require(
-            subscriptions[subscriptionManagerId][subscriptionId].isActive,
-            "Subscription is disabled"
-        );
+        //Avoid verify if subscription is active if it's a dynamic subscription
+        if (subscriptionId != 255) {
+            require(
+                subscriptions[subscriptionManagerId][subscriptionId].isActive,
+                "Subscription is disabled"
+            );
+        }
 
         CicleoSubscriptionManager manager = CicleoSubscriptionManager(
             factory.ids(subscriptionManagerId)
@@ -241,7 +234,13 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         uint256 subscriptionManagerId,
         uint8 subscriptionId
     ) external {
-        require(subscriptionId != 255, "Wrong sub type");
+        require(
+            (subscriptionId > 0 &&
+                subscriptionId <= subscriptionNumber[subscriptionManagerId]) ||
+                subscriptionManagerId == 255,
+            "Wrong sub type"
+        );
+
         CicleoSubscriptionManager manager = CicleoSubscriptionManager(
             factory.ids(subscriptionManagerId)
         );
@@ -267,33 +266,35 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
 
     /// @notice Function to subscribe to a subscription with the swapped token
     /// @param subscriptionManagerId Id of the submanager
-    /// @param subscrptionId Id of the subscription
+    /// @param subscriptionId Id of the subscription
     /// @param executor Executor contract (OpenOcean part)
     /// @param desc Swap description (OpenOcean part)
     /// @param calls Calls to execute (OpenOcean part)
     function subscribeWithSwap(
         uint256 subscriptionManagerId,
-        uint8 subscrptionId,
+        uint8 subscriptionId,
         IOpenOceanCaller executor,
         SwapDescription memory desc,
         IOpenOceanCaller.CallDescription[] calldata calls
     ) external {
         require(
-            subscrptionId > 0 &&
-                subscrptionId <= subscriptionNumber[subscriptionManagerId],
+            (subscriptionId > 0 &&
+                subscriptionId <= subscriptionNumber[subscriptionManagerId]) ||
+                subscriptionManagerId == 255,
             "Wrong sub type"
         );
+
         CicleoSubscriptionManager manager = CicleoSubscriptionManager(
             factory.ids(subscriptionManagerId)
         );
 
         SubscriptionStruct memory sub = subscriptions[subscriptionManagerId][
-            subscrptionId
+            subscriptionId
         ];
 
         payFunctionWithSwap(
             subscriptionManagerId,
-            subscrptionId,
+            subscriptionId,
             executor,
             desc,
             calls,
@@ -313,11 +314,11 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
 
     /// @notice Function to subscribe with a given price and name
     /// @param subscriptionManagerId Id of the submanager
-    /// @param subscrptionName Name of the subscription
+    /// @param subscriptionName Name of the subscription
     /// @param price Price of the subscription
     function subscribeDynamicly(
         uint256 subscriptionManagerId,
-        string calldata subscrptionName,
+        string calldata subscriptionName,
         uint256 price
     ) external {
         CicleoSubscriptionManager manager = CicleoSubscriptionManager(
@@ -332,7 +333,7 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
             block.timestamp + manager.subscriptionDuration()
         );
 
-        users[msg.sender] = DynamicSubscriptionData(subscrptionName, price);
+        users[msg.sender] = DynamicSubscriptionData(subscriptionName, price);
 
         emit SelectToken(
             subscriptionManagerId,
@@ -343,14 +344,14 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
 
     /// @notice Function to subscribe with a given price and name with swap
     /// @param subscriptionManagerId Id of the submanager
-    /// @param subscrptionName Name of the subscription
+    /// @param subscriptionName Name of the subscription
     /// @param price Price of the subscription
     /// @param executor Executor contract (OpenOcean part)
     /// @param desc Swap description (OpenOcean part)
     /// @param calls Calls to execute (OpenOcean part)
     function subscribeDynamiclyWithSwap(
         uint256 subscriptionManagerId,
-        string calldata subscrptionName,
+        string calldata subscriptionName,
         uint256 price,
         IOpenOceanCaller executor,
         SwapDescription memory desc,
@@ -371,7 +372,7 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
             block.timestamp + manager.subscriptionDuration()
         );
 
-        users[msg.sender] = DynamicSubscriptionData(subscrptionName, price);
+        users[msg.sender] = DynamicSubscriptionData(subscriptionName, price);
 
         emit SelectToken(
             subscriptionManagerId,
@@ -474,9 +475,14 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
             factory.ids(subscriptionManagerId)
         );
 
-        (uint256 enddate,uint256 oldSubscriptionId,,,) = subManager.users(msg.sender);
+        (uint256 enddate, uint256 oldSubscriptionId, , , ) = subManager.users(
+            msg.sender
+        );
 
-        require(enddate > block.timestamp, "You don't have an actual subscriptions");
+        require(
+            enddate > block.timestamp,
+            "You don't have an actual subscriptions"
+        );
 
         require(
             oldSubscriptionId != 0 && oldSubscriptionId != 255,
@@ -521,10 +527,13 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         }
     }
 
-
     //Bridge subscription part
 
-    function subscribeWithBridge(address user, uint256 subscriptionManagerId, uint8 subscriptionId) external {
+    function subscribeWithBridge(
+        address user,
+        uint256 subscriptionManagerId,
+        uint8 subscriptionId
+    ) external {
         require(msg.sender == bridgeExecutor, "Not allowed");
 
         CicleoSubscriptionManager subManager = CicleoSubscriptionManager(
@@ -539,13 +548,10 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
 
         redistributeToken(price, subManager);
 
-        uint256 subscriptionEndDate = block.timestamp + subManager.subscriptionDuration();
+        uint256 subscriptionEndDate = block.timestamp +
+            subManager.subscriptionDuration();
 
-        subManager.editAccount(
-            user,
-            subscriptionEndDate,
-            subscriptionId
-        );
+        subManager.editAccount(user, subscriptionEndDate, subscriptionId);
 
         emit UserEdited(
             subscriptionManagerId,
