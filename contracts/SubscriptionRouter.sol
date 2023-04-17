@@ -527,6 +527,27 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         }
     }
 
+    function getChangeSubscriptionPrice(
+        uint256 subscriptionManagerId,
+        address user,
+        uint8 newSubscriptionId
+    ) external view returns (uint256) {
+        CicleoSubscriptionManager subManager = CicleoSubscriptionManager(
+            factory.ids(subscriptionManagerId)
+        );
+        uint8 oldSubscriptionId = subManager.getUserSubscriptionId(user);
+
+        uint256 oldPrice = subscriptions[subscriptionManagerId][
+            oldSubscriptionId
+        ].price;
+
+        uint256 newPrice = subscriptions[subscriptionManagerId][
+            newSubscriptionId
+        ].price;
+
+        return subManager.getAmountChangeSubscription(user, oldPrice, newPrice);
+    }
+
     //Bridge subscription part
 
     function subscribeWithBridge(

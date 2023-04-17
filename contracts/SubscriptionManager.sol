@@ -312,11 +312,12 @@ contract CicleoSubscriptionManager {
 
         if (newPrice > oldPrice) {
             // Compute the price to be paid to regulate
-            uint256 currentTime = block.timestamp;
-            uint256 timeToNextPayment = (_user.lastPayment +
-                subscriptionDuration) - currentTime;
-            uint256 priceAdjusted = ((newPrice - oldPrice) /
-                subscriptionDuration) * timeToNextPayment;
+
+            uint256 priceAdjusted = getAmountChangeSubscription(
+                user,
+                oldPrice,
+                newPrice
+            );
 
             token.transferFrom(user, routerSubscription, priceAdjusted);
         }
@@ -331,6 +332,22 @@ contract CicleoSubscriptionManager {
         );
 
         return newPrice > oldPrice ? (newPrice - oldPrice) : 0;
+    }
+
+    function getAmountChangeSubscription(
+        address user,
+        uint256 oldPrice,
+        uint256 newPrice
+    ) public view returns (uint256) {
+        UserData memory _user = users[user];
+
+        uint256 currentTime = block.timestamp;
+        uint256 timeToNextPayment = (_user.lastPayment + subscriptionDuration) -
+            currentTime;
+        uint256 priceAdjusted = ((newPrice - oldPrice) / subscriptionDuration) *
+            timeToNextPayment;
+
+        return priceAdjusted;
     }
 
     /// @notice Delete the submanager
