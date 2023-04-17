@@ -28,6 +28,9 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
     /// @notice Address of the bot account (for cicleo)
     address public botAccount;
 
+    /// @notice Address of the LiFi executor
+    address public bridgeExecutor;
+
     /// @notice Percentage of tax to apply on each payment
     uint16 taxPercentage;
 
@@ -39,10 +42,8 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
     mapping(uint256 => uint8) public subscriptionNumber;
 
     /// @notice Mapping to store the dynamic subscription info for each user
-    mapping(address => DynamicSubscriptionData) public users;
-
-    /// @notice Address of the LiFi executor
-    address public bridgeExecutor;
+    mapping(uint256 => mapping(address => DynamicSubscriptionData))
+        public users;
 
     /// @notice Event when a user pays for a subscription (first time or even renewing)
     event PaymentSubscription(
@@ -333,7 +334,10 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
             block.timestamp + manager.subscriptionDuration()
         );
 
-        users[msg.sender] = DynamicSubscriptionData(subscriptionName, price);
+        users[subscriptionManagerId][msg.sender] = DynamicSubscriptionData(
+            subscriptionName,
+            price
+        );
 
         emit SelectToken(
             subscriptionManagerId,
@@ -372,7 +376,10 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
             block.timestamp + manager.subscriptionDuration()
         );
 
-        users[msg.sender] = DynamicSubscriptionData(subscriptionName, price);
+        users[subscriptionManagerId][msg.sender] = DynamicSubscriptionData(
+            subscriptionName,
+            price
+        );
 
         emit SelectToken(
             subscriptionManagerId,
@@ -400,7 +407,7 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         if (subscriptionId == 0) {
             return;
         } else if (subscriptionId == 255) {
-            price = users[user].price;
+            price = users[subscriptionManagerId][user].price;
         } else {
             SubscriptionStruct memory sub = subscriptions[
                 subscriptionManagerId
