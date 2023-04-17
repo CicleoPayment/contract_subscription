@@ -333,6 +333,24 @@ describe("Subscription Test", function () {
         expect(subManagerInfo.owners[0]).to.be.equal(owner.address);
     });
 
+    it("Pay subscription type", async function () {
+        expect(await token.balanceOf(account1.address)).to.be.equal(
+            utils.parseEther("100")
+        );
+
+        await subManager
+            .connect(account1)
+            .changeSubscriptionLimit(utils.parseEther("10"));
+        await router.connect(account1).subscribe(1, 1);
+        await router.newSubscription(1, utils.parseEther("50"), "Test");
+
+        await network.provider.send("evm_increaseTime", [15 * 86400]);
+        await network.provider.send("evm_mine");
+
+        expect(await router.getChangeSubscriptionPrice(1, account1.address, 2)).to.be.equal(utils.parseEther("19.999976851851851851"));
+        
+    });
+
     /* it("Refund Upgrade", async function () { 
         expect(await token.balanceOf(account1.address)).to.be.equal(utils.parseEther("100"));
         await router.newSubscription(utils.parseEther("15"), "Test");
