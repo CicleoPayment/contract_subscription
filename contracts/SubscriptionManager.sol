@@ -304,7 +304,7 @@ contract CicleoSubscriptionManager {
         uint256 oldPrice,
         uint256 newPrice,
         uint8 subscriptionId
-    ) external returns (uint256){
+    ) external returns (uint256) {
         address routerSubscription = factory.routerSubscription();
         require(msg.sender == routerSubscription, "Not allowed to");
 
@@ -313,10 +313,10 @@ contract CicleoSubscriptionManager {
         if (newPrice > oldPrice) {
             // Compute the price to be paid to regulate
             uint256 currentTime = block.timestamp;
-            uint256 timeToNextPayment = (_user.lastPayment + subscriptionDuration) -
-                currentTime;
-            uint256 priceAdjusted = ((newPrice - oldPrice) / subscriptionDuration) *
-                timeToNextPayment;
+            uint256 timeToNextPayment = (_user.lastPayment +
+                subscriptionDuration) - currentTime;
+            uint256 priceAdjusted = ((newPrice - oldPrice) /
+                subscriptionDuration) * timeToNextPayment;
 
             token.transferFrom(user, routerSubscription, priceAdjusted);
         }

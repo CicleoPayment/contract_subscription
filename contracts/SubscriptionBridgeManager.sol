@@ -11,7 +11,8 @@ import {CicleoSubscriptionFactory} from "./SubscriptionFactory.sol";
 /// @notice This contract is used to permit the payment via LiFi
 contract CicleoSubscriptionBridgeManager {
     /// @notice users Mapping of the networkID to a mapping of the subscription manager id to the user address to the subscription approval
-    mapping(uint256 => mapping(uint256 => mapping(address => uint256))) public usersSubscriptionLimit;
+    mapping(uint256 => mapping(uint256 => mapping(address => uint256)))
+        public usersSubscriptionLimit;
 
     /// @notice Event when a user change his subscription limit
     event EditSubscriptionLimit(
@@ -25,10 +26,21 @@ contract CicleoSubscriptionBridgeManager {
     /// @param chainId Chain id where the submanager is
     /// @param subscriptionManagerId Id of the submanager
     /// @param amountMaxPerPeriod New subscription price limit per period in the submanager token
-    function changeSubscriptionLimit(uint256 chainId, uint256 subscriptionManagerId, uint256 amountMaxPerPeriod) external {
-        usersSubscriptionLimit[chainId][subscriptionManagerId][msg.sender] = amountMaxPerPeriod;
+    function changeSubscriptionLimit(
+        uint256 chainId,
+        uint256 subscriptionManagerId,
+        uint256 amountMaxPerPeriod
+    ) external {
+        usersSubscriptionLimit[chainId][subscriptionManagerId][
+            msg.sender
+        ] = amountMaxPerPeriod;
 
-        emit EditSubscriptionLimit(msg.sender, chainId, subscriptionManagerId, amountMaxPerPeriod);
+        emit EditSubscriptionLimit(
+            msg.sender,
+            chainId,
+            subscriptionManagerId,
+            amountMaxPerPeriod
+        );
     }
 
     /// @notice Function to pay subscription with any coin on another chain
@@ -46,7 +58,9 @@ contract CicleoSubscriptionBridgeManager {
     ) external payable {
         //Verify subscription limit
         require(
-            usersSubscriptionLimit[chainId][subscriptionManagerId][msg.sender] >= price,
+            usersSubscriptionLimit[chainId][subscriptionManagerId][
+                msg.sender
+            ] >= price,
             "You need to approve our contract to spend this amount of tokens"
         );
 
@@ -61,9 +75,7 @@ contract CicleoSubscriptionBridgeManager {
 
         token.approve(bridge, price);
 
-        (bool success, bytes memory data) = bridge.call{value: msg.value}(
-            data
-        );
+        (bool success, bytes memory data) = bridge.call{value: msg.value}(data);
     }
 
     /// @notice Function to renew subscription (called only by bot)
@@ -72,7 +84,6 @@ contract CicleoSubscriptionBridgeManager {
     /// @param price Price of the subscription in the _token
     /// @param _token Token used to pay the subscription
     function renewFunctionWithBridge(
-        address user,
         uint256 chainId,
         uint256 subscriptionManagerId,
         uint256 price,
@@ -82,7 +93,9 @@ contract CicleoSubscriptionBridgeManager {
     ) external payable {
         //Verify subscription limit
         require(
-            usersSubscriptionLimit[chainId][subscriptionManagerId][msg.sender] >= price,
+            usersSubscriptionLimit[chainId][subscriptionManagerId][
+                msg.sender
+            ] >= price,
             "You need to approve our contract to spend this amount of tokens"
         );
 
@@ -97,8 +110,6 @@ contract CicleoSubscriptionBridgeManager {
 
         token.approve(bridge, price);
 
-        (bool success, bytes memory data) = bridge.call{value: msg.value}(
-            data
-        );
+        (bool success, bytes memory data) = bridge.call{value: msg.value}(data);
     }
 }

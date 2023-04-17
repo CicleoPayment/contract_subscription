@@ -756,7 +756,8 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
                 getActiveSubscriptionCount(id),
                 subManager.treasury(),
                 getSubscriptions(id),
-                security.getOwnersBySubmanagerId(id)
+                security.getOwnersBySubmanagerId(id),
+                subManager.subscriptionDuration()
             );
     }
 

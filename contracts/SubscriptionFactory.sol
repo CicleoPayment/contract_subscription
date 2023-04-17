@@ -89,7 +89,11 @@ contract CicleoSubscriptionFactory is OwnableUpgradeable {
 
         security.mintNft(msg.sender, idCount);
 
-        emit SubscriptionManagerCreated(msg.sender, address(subscription), idCount);
+        emit SubscriptionManagerCreated(
+            msg.sender,
+            address(subscription),
+            idCount
+        );
 
         ids[idCount] = address(subscription);
 

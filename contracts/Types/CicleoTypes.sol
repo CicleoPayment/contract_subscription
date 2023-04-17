@@ -34,6 +34,7 @@ struct SubscriptionManagerStruct {
     address treasury;
     SubscriptionStruct[] subscriptions;
     address[] owners;
+    uint256 subscriptionDuration;
 }
 
 struct SubscriptionStruct {
