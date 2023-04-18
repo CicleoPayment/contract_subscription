@@ -272,6 +272,13 @@ contract CicleoSubscriptionManager {
         treasury = _treasury;
     }
 
+    /// @notice Edit the token address
+    /// @param _token New Token address
+    function setToken(address _token) external {
+        require(msg.sender == factory.routerSubscription(), "Not allowed to");
+        token = IERC20(_token);
+    }
+
     /// @notice Edit the state of a user
     /// @param user User to edit
     /// @param subscriptionEndDate New subscription end date (timestamp unix seconds)
@@ -341,8 +348,10 @@ contract CicleoSubscriptionManager {
     ) public view returns (uint256) {
         UserData memory _user = users[user];
 
-        uint256 currentTime = block.timestamp;
+        uint256 currentTime = block.timestamp; 
         uint256 timeToNextPayment = _user.subscriptionEndDate;
+        uint256 priceAdjusted = ((newPrice - oldPrice) / subscriptionDuration) *
+            timeToNextPayment; 
 
         uint256 oldPriceAdjusted = (oldPrice *
             (subscriptionDuration - (timeToNextPayment - currentTime))) /

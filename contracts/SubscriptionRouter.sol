@@ -75,6 +75,12 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         address indexed user,
         address newTreasury
     );
+    /// @notice Event when an admin change the token address
+    event TokenEdited(
+        uint256 indexed SubscriptionManagerId,
+        address indexed token,
+        address newTreasury
+    );
     /// @notice Event when an admin change the submanager name
     event NameEdited(
         uint256 indexed SubscriptionManagerId,
@@ -542,7 +548,7 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         CicleoSubscriptionManager subManager = CicleoSubscriptionManager(
             factory.ids(subscriptionManagerId)
         );
-        uint8 oldSubscriptionId = subManager.getUserSubscriptionId(user);
+        (uint8 oldSubscriptionId, bool isActive) = subManager.getUserSubscriptionStatus(user);
 
         uint256 oldPrice = subscriptions[subscriptionManagerId][
             oldSubscriptionId
@@ -552,7 +558,15 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
             newSubscriptionId
         ].price;
 
-        return subManager.getAmountChangeSubscription(user, oldPrice, newPrice);
+        if (oldSubscriptionId == 0 || isActive == false) {
+            return newPrice;
+        }
+
+        if (newPrice > oldPrice) {
+            return subManager.getAmountChangeSubscription(user, oldPrice, newPrice);
+        } else {
+            return 0;
+        }
     }
 
     //Bridge subscription part
@@ -675,7 +689,7 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
     function setTreasury(
         uint256 subscriptionManagerId,
         address treasury
-    ) external onlyOwner {
+    ) external onlySubOwner(subscriptionManagerId) {
         CicleoSubscriptionManager subManager = CicleoSubscriptionManager(
             factory.ids(subscriptionManagerId)
         );
@@ -685,13 +699,30 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         emit TreasuryEdited(subscriptionManagerId, msg.sender, treasury);
     }
 
+    /// @notice Function to set the treasury of the submanager (admin only)
+    /// @param subscriptionManagerId Id of the submanager
+    /// @param token New token address
+    function setToken(
+        uint256 subscriptionManagerId,
+        address token
+    ) external onlySubOwner(subscriptionManagerId) {
+        CicleoSubscriptionManager subManager = CicleoSubscriptionManager(
+            factory.ids(subscriptionManagerId)
+        );
+
+        subManager.setToken(token);
+
+        emit TokenEdited(subscriptionManagerId, msg.sender, token);
+    }
+
+
     /// @notice Function to change the name of the submanager (admin only)
     /// @param subscriptionManagerId Id of the submanager
     /// @param name New submanager name
     function setName(
         uint256 subscriptionManagerId,
         string memory name
-    ) external onlyOwner {
+    ) external onlySubOwner(subscriptionManagerId) {
         CicleoSubscriptionManager subManager = CicleoSubscriptionManager(
             factory.ids(subscriptionManagerId)
         );
