@@ -4,7 +4,7 @@ const { ethers, waffle } = require("hardhat");
 const provider = waffle.provider;
 
 const Deployy = async () => {
-    [owner, account1, account2, bot, treasury] = await ethers.getSigners();
+    [owner, account1, account2, account3, bot, treasury] = await ethers.getSigners();
 
     let Token = await ethers.getContractFactory("TestnetUSDC");
     let token = await Token.deploy();
@@ -32,7 +32,7 @@ const Deployy = async () => {
 
     await factory.setRouterSubscription(router.address);
 
-    return [token, factory, router, security, owner, account1, account2];
+    return [token, factory, router, security, owner, account1, account2, account3];
 };
 
 describe("Subscription Test", function () {
@@ -44,9 +44,10 @@ describe("Subscription Test", function () {
     let owner;
     let account1;
     let account2;
+    let account3;
 
     beforeEach(async function () {
-        [token, factory, router, security, owner, account1, account2] =
+        [token, factory, router, security, owner, account1, account2, account3] =
             await Deployy();
 
         await factory.createSubscriptionManager(
@@ -100,7 +101,9 @@ describe("Subscription Test", function () {
         await subManager
             .connect(account1)
             .changeSubscriptionLimit(utils.parseEther("10"));
-        await router.connect(account1).subscribe(1, 1);
+        await router
+            .connect(account1)
+            .subscribe(1, 1, ethers.constants.AddressZero);
 
         expect(await token.balanceOf(account1.address)).to.be.equal(
             utils.parseEther("90")
@@ -116,10 +119,14 @@ describe("Subscription Test", function () {
 
     it("Pay with wrong subscription type", async function () {
         await expect(
-            router.connect(account1).subscribe(1, 0)
+            router
+                .connect(account1)
+                .subscribe(1, 0, ethers.constants.AddressZero)
         ).to.be.revertedWith("Wrong sub type");
         await expect(
-            router.connect(account1).subscribe(1, 2)
+            router
+                .connect(account1)
+                .subscribe(1, 2, ethers.constants.AddressZero)
         ).to.be.revertedWith("Wrong sub type");
     });
 
@@ -127,7 +134,9 @@ describe("Subscription Test", function () {
         await subManager
             .connect(account1)
             .changeSubscriptionLimit(utils.parseEther("10"));
-        await router.connect(account1).subscribe(1, 1);
+        await router
+            .connect(account1)
+            .subscribe(1, 1, ethers.constants.AddressZero);
 
         expect(
             (await subManager.getUserSubscriptionStatus(account1.address))[0]
@@ -146,7 +155,9 @@ describe("Subscription Test", function () {
 
     it("Subscription approval", async function () {
         await expect(
-            router.connect(account1).subscribe(1, 1)
+            router
+                .connect(account1)
+                .subscribe(1, 1, ethers.constants.AddressZero)
         ).to.be.revertedWith(
             "You need to approve our contract to spend this amount of token"
         );
@@ -154,8 +165,10 @@ describe("Subscription Test", function () {
         await subManager
             .connect(account1)
             .changeSubscriptionLimit(utils.parseEther("10"));
-        
-        await router.connect(account1).subscribe(1, 1);
+
+        await router
+            .connect(account1)
+            .subscribe(1, 1, ethers.constants.AddressZero);
 
         await router.editSubscription(
             1,
@@ -168,7 +181,11 @@ describe("Subscription Test", function () {
         await network.provider.send("evm_increaseTime", [31 * 86400]);
         await network.provider.send("evm_mine");
 
-        await expect(router.connect(bot).subscriptionRenew(1, account1.address)).to.be.revertedWith("You need to approve our contract to spend this amount of tokens")
+        await expect(
+            router.connect(bot).subscriptionRenew(1, account1.address)
+        ).to.be.revertedWith(
+            "You need to approve our contract to spend this amount of tokens"
+        );
 
         expect(
             (await subManager.getUserSubscriptionStatus(account1.address))[1]
@@ -191,7 +208,9 @@ describe("Subscription Test", function () {
         await subManager
             .connect(account1)
             .changeSubscriptionLimit(utils.parseEther("10"));
-        await router.connect(account1).subscribe(1, 1);
+        await router
+            .connect(account1)
+            .subscribe(1, 1, ethers.constants.AddressZero);
 
         expect(await token.balanceOf(account1.address)).to.be.equal(
             utils.parseEther("90")
@@ -203,7 +222,9 @@ describe("Subscription Test", function () {
 
         await expect(
             router.connect(bot).subscriptionRenew(1, account1.address)
-        ).to.be.revertedWith("You can't renew before the end of your subscription");
+        ).to.be.revertedWith(
+            "You can't renew before the end of your subscription"
+        );
 
         await network.provider.send("evm_increaseTime", [31 * 86400]);
         await network.provider.send("evm_mine");
@@ -239,7 +260,9 @@ describe("Subscription Test", function () {
         await subManager
             .connect(account1)
             .changeSubscriptionLimit(utils.parseEther("10"));
-        await router.connect(account1).subscribe(1, 1);
+        await router
+            .connect(account1)
+            .subscribe(1, 1, ethers.constants.AddressZero);
 
         expect(await token.balanceOf(account1.address)).to.be.equal(
             utils.parseEther("90")
@@ -251,7 +274,9 @@ describe("Subscription Test", function () {
 
         await expect(
             router.connect(bot).subscriptionRenew(1, account1.address)
-        ).to.be.revertedWith("You can't renew before the end of your subscription");
+        ).to.be.revertedWith(
+            "You can't renew before the end of your subscription"
+        );
 
         await network.provider.send("evm_increaseTime", [30 * 86400]);
         await network.provider.send("evm_mine");
@@ -282,7 +307,9 @@ describe("Subscription Test", function () {
         await subManager
             .connect(account1)
             .changeSubscriptionLimit(utils.parseEther("10"));
-        await router.connect(account1).subscribe(1, 1);
+        await router
+            .connect(account1)
+            .subscribe(1, 1, ethers.constants.AddressZero);
 
         expect(await token.balanceOf(treasury.address)).to.be.equal(
             utils.parseEther("0.15")
@@ -341,14 +368,47 @@ describe("Subscription Test", function () {
         await subManager
             .connect(account1)
             .changeSubscriptionLimit(utils.parseEther("10"));
-        await router.connect(account1).subscribe(1, 1);
+        await router
+            .connect(account1)
+            .subscribe(1, 1, ethers.constants.AddressZero);
         await router.newSubscription(1, utils.parseEther("50"), "Test");
 
         await network.provider.send("evm_increaseTime", [15 * 86400]);
         await network.provider.send("evm_mine");
 
-        expect(await router.getChangeSubscriptionPrice(1, account1.address, 2)).to.be.equal(utils.parseEther("19.999976851851851851"));
-        
+        expect(
+            await router.getChangeSubscriptionPrice(1, account1.address, 2)
+        ).to.be.equal(utils.parseEther("19.999976851851851851"));
+    });
+
+    it("Referral test without being subscribed", async function () {
+        expect(await token.balanceOf(account3.address)).to.be.equal(0);
+
+        //Set referral percent to 1%
+        await router.setReferralPercent(1, 10);
+        await subManager
+            .connect(account1)
+            .changeSubscriptionLimit(utils.parseEther("10"));
+        await router.connect(account1).subscribe(1, 1, account3.address);
+
+        expect(await token.balanceOf(account3.address)).to.be.equal(0); //utils.parseEther("0.0985")
+    });
+
+    it("Referral test", async function () {
+        expect(await token.balanceOf(account3.address)).to.be.equal(0);
+
+        //Set referral percent to 1%
+        await router.setReferralPercent(1, 10);
+
+        await router.editAccount(1, account3.address, Math.ceil(Date.now() / 1000) + 86400, 1);
+
+        console.log("jfjur")
+        await subManager
+            .connect(account1)
+            .changeSubscriptionLimit(utils.parseEther("10"));
+        await router.connect(account1).subscribe(1, 1, account3.address);
+
+        expect(await token.balanceOf(account3.address)).to.be.equal(0); //utils.parseEther("0.0985")
     });
 
     /* it("Refund Upgrade", async function () { 

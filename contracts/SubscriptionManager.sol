@@ -350,8 +350,6 @@ contract CicleoSubscriptionManager {
 
         uint256 currentTime = block.timestamp; 
         uint256 timeToNextPayment = _user.subscriptionEndDate;
-        uint256 priceAdjusted = ((newPrice - oldPrice) / subscriptionDuration) *
-            timeToNextPayment; 
 
         uint256 oldPriceAdjusted = (oldPrice *
             (subscriptionDuration - (timeToNextPayment - currentTime))) /

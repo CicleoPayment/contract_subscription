@@ -45,6 +45,12 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
     mapping(uint256 => mapping(address => DynamicSubscriptionData))
         public users;
 
+    /// @notice Mapping to store the user referral data for each submanager
+    mapping(uint256 => mapping(address => address)) public userReferral;
+
+    /// @notice Mapping to store the referral percent for each submanager
+    mapping(uint256 => uint16) public referralPercent;
+
     /// @notice Event when a user pays for a subscription (first time or even renewing)
     event PaymentSubscription(
         uint256 indexed subscriptionManagerId,
@@ -94,6 +100,13 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         address indexed tokenAddress
     );
 
+    /// @notice Event when an admin change the tax account
+    event ReferralPercentEdited(
+        uint256 indexed SubscriptionManagerId,
+        address indexed user,
+        uint16 percent
+    );
+
     /// @notice Verify if user have ownerpass for assoicated submanager
     /// @param id Id of the submanager
     modifier onlySubOwner(uint256 id) {
@@ -129,14 +142,26 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
     /// @param manager Submanager contract
     function redistributeToken(
         uint256 price,
-        CicleoSubscriptionManager manager
+        CicleoSubscriptionManager manager,
+        uint256 id,
+        address user
     ) internal {
         uint256 tax = (price * taxPercentage) / 1000;
 
         IERC20 token = IERC20(manager.tokenAddress());
         address treasury = manager.treasury();
 
-        token.transfer(treasury, price - tax);
+        uint256 toOwner = price - tax;
+
+        (, bool isActive) = manager.getUserSubscriptionStatus(userReferral[id][user]);
+
+        if (userReferral[id][user] != address(0) && referralPercent[id] > 0 && isActive) {
+            uint256 referral = (toOwner * referralPercent[id]) / 1000;
+            toOwner -= referral;
+            token.transfer(userReferral[id][user], referral);
+        }
+
+        token.transfer(treasury, toOwner);
         token.transfer(factory.taxAccount(), tax);
     }
 
@@ -167,7 +192,7 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
 
         manager.payFunctionWithSubToken(user, subscriptionId, price, endDate);
 
-        redistributeToken(price, manager);
+        redistributeToken(price, manager, subscriptionManagerId, user);
 
         emit PaymentSubscription(
             subscriptionManagerId,
@@ -220,7 +245,7 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
             endDate
         );
 
-        redistributeToken(price, manager);
+        redistributeToken(price, manager, subscriptionManagerId, user);
 
         emit PaymentSubscription(
             subscriptionManagerId,
@@ -239,7 +264,8 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
     /// @param subscriptionId Id of the subscription
     function subscribe(
         uint256 subscriptionManagerId,
-        uint8 subscriptionId
+        uint8 subscriptionId,
+        address referral
     ) external {
         require(
             (subscriptionId > 0 &&
@@ -251,6 +277,8 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         CicleoSubscriptionManager manager = CicleoSubscriptionManager(
             factory.ids(subscriptionManagerId)
         );
+
+        userReferral[subscriptionManagerId][msg.sender] = referral;
 
         SubscriptionStruct memory sub = subscriptions[subscriptionManagerId][
             subscriptionId
@@ -280,6 +308,7 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
     function subscribeWithSwap(
         uint256 subscriptionManagerId,
         uint8 subscriptionId,
+        address referral,
         IOpenOceanCaller executor,
         SwapDescription memory desc,
         IOpenOceanCaller.CallDescription[] calldata calls
@@ -294,6 +323,8 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         CicleoSubscriptionManager manager = CicleoSubscriptionManager(
             factory.ids(subscriptionManagerId)
         );
+
+        userReferral[subscriptionManagerId][msg.sender] = referral;
 
         SubscriptionStruct memory sub = subscriptions[subscriptionManagerId][
             subscriptionId
@@ -326,11 +357,14 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
     function subscribeDynamicly(
         uint256 subscriptionManagerId,
         string calldata subscriptionName,
-        uint256 price
+        uint256 price, 
+        address referral
     ) external {
         CicleoSubscriptionManager manager = CicleoSubscriptionManager(
             factory.ids(subscriptionManagerId)
         );
+
+        userReferral[subscriptionManagerId][msg.sender] = referral;
 
         payFunction(
             subscriptionManagerId,
@@ -363,6 +397,7 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         uint256 subscriptionManagerId,
         string calldata subscriptionName,
         uint256 price,
+        address referral,
         IOpenOceanCaller executor,
         SwapDescription memory desc,
         IOpenOceanCaller.CallDescription[] calldata calls
@@ -370,6 +405,8 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         CicleoSubscriptionManager manager = CicleoSubscriptionManager(
             factory.ids(subscriptionManagerId)
         );
+
+        userReferral[subscriptionManagerId][msg.sender] = referral;
 
         payFunctionWithSwap(
             subscriptionManagerId,
@@ -529,7 +566,7 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         );
 
         if (difference > 0) {
-            redistributeToken(difference, subManager);
+            redistributeToken(difference, subManager, subscriptionManagerId, msg.sender);
 
             emit PaymentSubscription(
                 subscriptionManagerId,
@@ -569,40 +606,6 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         }
     }
 
-    //Bridge subscription part
-
-    function subscribeWithBridge(
-        address user,
-        uint256 subscriptionManagerId,
-        uint8 subscriptionId
-    ) external {
-        require(msg.sender == bridgeExecutor, "Not allowed");
-
-        CicleoSubscriptionManager subManager = CicleoSubscriptionManager(
-            factory.ids(subscriptionManagerId)
-        );
-
-        IERC20 token = IERC20(subManager.tokenAddress());
-
-        uint256 price = token.allowance(bridgeExecutor, address(this));
-
-        token.transferFrom(bridgeExecutor, address(this), price);
-
-        redistributeToken(price, subManager);
-
-        uint256 subscriptionEndDate = block.timestamp +
-            subManager.subscriptionDuration();
-
-        subManager.editAccount(user, subscriptionEndDate, subscriptionId);
-
-        emit UserEdited(
-            subscriptionManagerId,
-            user,
-            subscriptionId,
-            subscriptionEndDate
-        );
-    }
-
     //SubManager Admin functions
 
     /// @notice Function to create a new subscription (admin only)
@@ -616,6 +619,7 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
     ) external onlySubOwner(subscriptionManagerId) {
         subscriptionNumber[subscriptionManagerId] += 1;
         require(subscriptionNumber[subscriptionManagerId] < 255, "You can't");
+        require(price > 0, "You can't have a zero price");
 
         subscriptions[subscriptionManagerId][
             subscriptionNumber[subscriptionManagerId]
@@ -643,6 +647,7 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         bool isActive
     ) external onlySubOwner(subscriptionManagerId) {
         require(id != 0 && id != 255, "You can't");
+        require(price > 0, "You can't have a zero price");
         subscriptions[subscriptionManagerId][id] = SubscriptionStruct(
             price,
             isActive,
@@ -730,6 +735,23 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         subManager.setName(name);
 
         emit NameEdited(subscriptionManagerId, msg.sender, name);
+    }
+
+    /// @notice Function to change the referral percent of the submanager (admin only)
+    /// @param subscriptionManagerId Id of the submanager
+    /// @param referralTaxPercent New referral percent out of 1000
+    function setReferralPercent(
+        uint256 subscriptionManagerId,
+        uint16 referralTaxPercent
+    ) external onlySubOwner(subscriptionManagerId) {
+        require(referralTaxPercent <= 1000, "You can't go over 1000");
+        referralPercent[subscriptionManagerId] = referralTaxPercent;
+
+        emit ReferralPercentEdited(
+            subscriptionManagerId,
+            msg.sender,
+            referralTaxPercent
+        );
     }
 
     //Get functions
