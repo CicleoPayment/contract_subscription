@@ -153,9 +153,15 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
 
         uint256 toOwner = price - tax;
 
-        (, bool isActive) = manager.getUserSubscriptionStatus(userReferral[id][user]);
+        (, bool isActive) = manager.getUserSubscriptionStatus(
+            userReferral[id][user]
+        );
 
-        if (userReferral[id][user] != address(0) && referralPercent[id] > 0 && isActive) {
+        if (
+            userReferral[id][user] != address(0) &&
+            referralPercent[id] > 0 &&
+            isActive
+        ) {
             uint256 referral = (toOwner * referralPercent[id]) / 1000;
             toOwner -= referral;
             token.transfer(userReferral[id][user], referral);
@@ -185,8 +191,11 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
                 "Subscription is disabled"
             );
         }
-        
-        if (subscriptions[subscriptionManagerId][subscriptionId].price == 0 && subscriptionId != 255) {
+
+        if (
+            subscriptions[subscriptionManagerId][subscriptionId].price == 0 &&
+            subscriptionId != 255
+        ) {
             endDate = 9999999999;
         }
 
@@ -235,7 +244,10 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
             );
         }
 
-        if (subscriptions[subscriptionManagerId][subscriptionId].price == 0 && subscriptionId != 255) {
+        if (
+            subscriptions[subscriptionManagerId][subscriptionId].price == 0 &&
+            subscriptionId != 255
+        ) {
             endDate = 9999999999;
         }
 
@@ -365,7 +377,7 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
     function subscribeDynamicly(
         uint256 subscriptionManagerId,
         string calldata subscriptionName,
-        uint256 price, 
+        uint256 price,
         address referral
     ) external {
         CicleoSubscriptionManager manager = CicleoSubscriptionManager(
@@ -552,9 +564,10 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
             "You cannot change to the same subscription"
         );
 
-        require(subscriptions[subscriptionManagerId][
-            newSubscriptionId
-        ].isActive, "This subscription is not active");
+        require(
+            subscriptions[subscriptionManagerId][newSubscriptionId].isActive,
+            "This subscription is not active"
+        );
 
         if (endDate == 9999999999) {
             endDate = block.timestamp + subManager.subscriptionDuration();
@@ -592,7 +605,12 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         );
 
         if (difference > 0) {
-            redistributeToken(difference, subManager, subscriptionManagerId, msg.sender);
+            redistributeToken(
+                difference,
+                subManager,
+                subscriptionManagerId,
+                msg.sender
+            );
 
             emit PaymentSubscription(
                 subscriptionManagerId,
@@ -603,6 +621,109 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         }
     }
 
+    /// @notice Function to change subscription type with swap
+    /// @param subscriptionManagerId Id of the submanager
+    /// @param newSubscriptionId Id of the new subscription
+    /// @param price Price of the subscription
+    /// @param executor Executor contract (OpenOcean part)
+    /// @param desc Swap description (OpenOcean part)
+    /// @param calls Calls to execute (OpenOcean part)
+    function changeSubscriptionWithSwap(
+        uint256 subscriptionManagerId,
+        uint8 newSubscriptionId,
+        uint256 price,
+        IOpenOceanCaller executor,
+        SwapDescription memory desc,
+        IOpenOceanCaller.CallDescription[] calldata calls
+    ) external {
+        CicleoSubscriptionManager subManager = CicleoSubscriptionManager(
+            factory.ids(subscriptionManagerId)
+        );
+
+        (uint256 endDate, uint256 oldSubscriptionId, , , ) = subManager.users(
+            msg.sender
+        );
+
+        require(
+            endDate > block.timestamp,
+            "You don't have an actual subscriptions"
+        );
+
+        require(
+            oldSubscriptionId != 255,
+            "You don't have an actual subscriptions"
+        );
+
+        require(
+            oldSubscriptionId != newSubscriptionId,
+            "You cannot change to the same subscription"
+        );
+
+        require(
+            subscriptions[subscriptionManagerId][newSubscriptionId].isActive,
+            "This subscription is not active"
+        );
+
+        if (endDate == 9999999999) {
+            endDate = block.timestamp + subManager.subscriptionDuration();
+        }
+
+        require(
+            oldSubscriptionId != 0 && oldSubscriptionId != 255,
+            "Invalid Id !"
+        );
+        require(
+            newSubscriptionId != 0 && newSubscriptionId != 255,
+            "Invalid Id !"
+        );
+
+        uint256 newPrice = subscriptions[subscriptionManagerId][
+            newSubscriptionId
+        ].price;
+
+        uint256 oldPrice = subscriptions[subscriptionManagerId][
+            oldSubscriptionId
+        ].price;
+
+        uint256 difference = subManager.changeSubscription(
+            msg.sender,
+            oldPrice,
+            newPrice,
+            newSubscriptionId
+        );
+
+        emit UserEdited(
+            subscriptionManagerId,
+            msg.sender,
+            newSubscriptionId,
+            endDate
+        );
+
+        if (difference > 0) {
+            payFunctionWithSwap(
+                subscriptionManagerId,
+                newSubscriptionId,
+                executor,
+                desc,
+                calls,
+                msg.sender,
+                price,
+                block.timestamp + subManager.subscriptionDuration()
+            );
+
+            emit PaymentSubscription(
+                subscriptionManagerId,
+                msg.sender,
+                newSubscriptionId,
+                difference
+            );
+        }
+    }
+
+    /// @notice Function to get the price when we change subscription
+    /// @param subscriptionManagerId Id of the submanager
+    /// @param user User address to pay for the subscription
+    /// @param newSubscriptionId Id of the new subscription
     function getChangeSubscriptionPrice(
         uint256 subscriptionManagerId,
         address user,
@@ -611,7 +732,8 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         CicleoSubscriptionManager subManager = CicleoSubscriptionManager(
             factory.ids(subscriptionManagerId)
         );
-        (uint8 oldSubscriptionId, bool isActive) = subManager.getUserSubscriptionStatus(user);
+        (uint8 oldSubscriptionId, bool isActive) = subManager
+            .getUserSubscriptionStatus(user);
 
         uint256 oldPrice = subscriptions[subscriptionManagerId][
             oldSubscriptionId
@@ -626,7 +748,12 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         }
 
         if (newPrice > oldPrice) {
-            return subManager.getAmountChangeSubscription(user, oldPrice, newPrice);
+            return
+                subManager.getAmountChangeSubscription(
+                    user,
+                    oldPrice,
+                    newPrice
+                );
         } else {
             return 0;
         }
@@ -744,7 +871,6 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
 
         emit TokenEdited(subscriptionManagerId, msg.sender, token);
     }
-
 
     /// @notice Function to change the name of the submanager (admin only)
     /// @param subscriptionManagerId Id of the submanager
