@@ -411,6 +411,35 @@ describe("Subscription Test", function () {
         expect(await token.balanceOf(account3.address)).to.be.equal(0); //utils.parseEther("0.0985")
     });
 
+    it("Free subscription test", async function () {
+        await router.newSubscription(1, utils.parseEther("0"), "Test");
+
+        expect(await token.balanceOf(account1.address)).to.be.equal(utils.parseEther("100"));
+
+        await subManager
+            .connect(account1)
+            .changeSubscriptionLimit(utils.parseEther("10"));
+        await router.connect(account1).subscribe(1, 2, ethers.constants.AddressZero);
+
+        expect(await token.balanceOf(account1.address)).to.be.equal(utils.parseEther("100"));
+
+        await network.provider.send("evm_increaseTime", [90 * 86400]);
+        await network.provider.send("evm_mine");
+
+        const res = await subManager.getUserSubscriptionStatus(account1.address);
+
+        expect(res.isActive).to.equal(true);
+
+        await router.connect(account1).subscribe(1, 1, ethers.constants.AddressZero);
+
+        expect((await subManager.getUserSubscriptionStatus(account1.address))[1]).to.equal(true);
+
+        await network.provider.send("evm_increaseTime", [30 * 86400]);
+        await network.provider.send("evm_mine");
+
+        expect((await subManager.getUserSubscriptionStatus(account1.address))[1]).to.equal(false);
+    });
+
     /* it("Refund Upgrade", async function () { 
         expect(await token.balanceOf(account1.address)).to.be.equal(utils.parseEther("100"));
         await router.newSubscription(utils.parseEther("15"), "Test");

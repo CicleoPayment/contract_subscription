@@ -3,7 +3,7 @@ const hre = require("hardhat");
 async function main() {
   const Node = await ethers.getContractFactory("CicleoSubscriptionRouter");
 
-  const node = await upgrades.upgradeProxy("0x646F7Ab7066900F189e822F147CB983865Ff24AC", Node);
+  const node = await upgrades.upgradeProxy("0x7B960C2F89a2829b323e6624cB03f6cD0046C97e", Node);
   await node.deployed();
 
   console.log("Node updated");

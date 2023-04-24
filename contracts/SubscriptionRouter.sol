@@ -185,6 +185,10 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
                 "Subscription is disabled"
             );
         }
+        
+        if (subscriptions[subscriptionManagerId][subscriptionId].price == 0 && subscriptionId != 255) {
+            endDate = 9999999999;
+        }
 
         CicleoSubscriptionManager manager = CicleoSubscriptionManager(
             factory.ids(subscriptionManagerId)
@@ -229,6 +233,10 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
                 subscriptions[subscriptionManagerId][subscriptionId].isActive,
                 "Subscription is disabled"
             );
+        }
+
+        if (subscriptions[subscriptionManagerId][subscriptionId].price == 0 && subscriptionId != 255) {
+            endDate = 9999999999;
         }
 
         CicleoSubscriptionManager manager = CicleoSubscriptionManager(
@@ -525,14 +533,32 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
             factory.ids(subscriptionManagerId)
         );
 
-        (uint256 enddate, uint256 oldSubscriptionId, , , ) = subManager.users(
+        (uint256 endDate, uint256 oldSubscriptionId, , , ) = subManager.users(
             msg.sender
         );
 
         require(
-            enddate > block.timestamp,
+            endDate > block.timestamp,
             "You don't have an actual subscriptions"
         );
+
+        require(
+            oldSubscriptionId != 255,
+            "You don't have an actual subscriptions"
+        );
+
+        require(
+            oldSubscriptionId != newSubscriptionId,
+            "You cannot change to the same subscription"
+        );
+
+        require(subscriptions[subscriptionManagerId][
+            newSubscriptionId
+        ].isActive, "This subscription is not active");
+
+        if (endDate == 9999999999) {
+            endDate = block.timestamp + subManager.subscriptionDuration();
+        }
 
         require(
             oldSubscriptionId != 0 && oldSubscriptionId != 255,
@@ -562,7 +588,7 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
             subscriptionManagerId,
             msg.sender,
             newSubscriptionId,
-            enddate
+            endDate
         );
 
         if (difference > 0) {
@@ -619,7 +645,6 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
     ) external onlySubOwner(subscriptionManagerId) {
         subscriptionNumber[subscriptionManagerId] += 1;
         require(subscriptionNumber[subscriptionManagerId] < 255, "You can't");
-        require(price > 0, "You can't have a zero price");
 
         subscriptions[subscriptionManagerId][
             subscriptionNumber[subscriptionManagerId]
@@ -647,7 +672,7 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         bool isActive
     ) external onlySubOwner(subscriptionManagerId) {
         require(id != 0 && id != 255, "You can't");
-        require(price > 0, "You can't have a zero price");
+
         subscriptions[subscriptionManagerId][id] = SubscriptionStruct(
             price,
             isActive,
