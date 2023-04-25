@@ -378,7 +378,7 @@ describe("Subscription Test", function () {
 
         expect(
             await router.getChangeSubscriptionPrice(1, account1.address, 2)
-        ).to.be.equal(utils.parseEther("19.999976851851851851"));
+        ).to.be.equal(utils.parseEther("19.999984567901234567"));
     });
 
     it("Referral test without being subscribed", async function () {

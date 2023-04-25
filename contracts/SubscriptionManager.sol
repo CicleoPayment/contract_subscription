@@ -311,7 +311,7 @@ contract CicleoSubscriptionManager {
         uint256 oldPrice,
         uint256 newPrice,
         uint8 subscriptionId
-    ) external returns (uint256) {
+    ) external returns (uint256 toPay) {
         address routerSubscription = factory.routerSubscription();
         require(msg.sender == routerSubscription, "Not allowed to");
 
@@ -327,6 +327,8 @@ contract CicleoSubscriptionManager {
             );
 
             token.transferFrom(user, routerSubscription, priceAdjusted);
+
+            toPay = priceAdjusted;
         }
 
         //Change the id of subscription
@@ -337,8 +339,65 @@ contract CicleoSubscriptionManager {
             _user.lastPayment,
             _user.canceled
         );
+    }
 
-        return newPrice > oldPrice ? (newPrice - oldPrice) : 0;
+    /// @notice Function to change subscription type and pay the difference for the actual period
+    /// @param user User to edit
+    /// @param oldPrice Price of the old subscription
+    /// @param newPrice Price of the new subscription
+    /// @param subscriptionId New subscription id
+    function changeSubscriptionWithSwap(
+        address user,
+        uint256 oldPrice,
+        uint256 newPrice,
+        uint8 subscriptionId,
+        IOpenOceanCaller executor,
+        SwapDescription memory desc,
+        IOpenOceanCaller.CallDescription[] memory calls 
+    ) external returns (uint256 toPay) {
+        address routerSubscription = factory.routerSubscription();
+        require(msg.sender == routerSubscription, "Not allowed to");
+
+        UserData memory _user = users[user];
+
+        if (newPrice > oldPrice) {
+            // Compute the price to be paid to regulate
+
+            uint256 priceAdjusted = getAmountChangeSubscription(
+                user,
+                oldPrice,
+                newPrice
+            );
+
+            IRouter routerSwap = factory.routerSwap();
+
+            //OpenOcean swap
+            desc.minReturnAmount = priceAdjusted;
+
+            uint256 balanceBefore = token.balanceOf(address(this));
+
+            IERC20(desc.srcToken).transferFrom(user, address(this), desc.amount);
+            IERC20(desc.srcToken).approve(address(routerSwap), desc.amount);
+
+            routerSwap.swap(executor, desc, calls);
+
+            //Verify if the token have a transfer fees or if the swap goes okay
+            uint256 balanceAfter = token.balanceOf(address(this));
+            require(balanceAfter - balanceBefore >= priceAdjusted, "Swap failed");
+
+            token.transfer(routerSubscription, balanceAfter);
+
+            toPay = balanceAfter;
+        }
+
+        //Change the id of subscription
+        users[user] = UserData(
+            _user.subscriptionEndDate,
+            subscriptionId,
+            _user.subscriptionLimit,
+            _user.lastPayment,
+            _user.canceled
+        );
     }
 
     function getAmountChangeSubscription(
@@ -351,14 +410,10 @@ contract CicleoSubscriptionManager {
         uint256 currentTime = block.timestamp; 
         uint256 timeToNextPayment = _user.subscriptionEndDate;
 
-        uint256 oldPriceAdjusted = (oldPrice *
-            (subscriptionDuration - (timeToNextPayment - currentTime))) /
-            subscriptionDuration;
+        uint256 newPriceAdjusted = ((newPrice - oldPrice) *
+            (timeToNextPayment - currentTime)) / subscriptionDuration;     
 
-        uint256 newPriceAdjusted = (newPrice *
-            (timeToNextPayment - currentTime)) / subscriptionDuration;
-
-        return newPriceAdjusted - oldPriceAdjusted;
+        return newPriceAdjusted;
     }
 
     /// @notice Delete the submanager

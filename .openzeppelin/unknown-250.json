@@ -365,7 +365,7 @@
             "label": "routerSwap",
             "offset": 0,
             "slot": "102",
-            "type": "t_contract(IRouter)7225",
+            "type": "t_contract(IRouter)5041",
             "contract": "CicleoSubscriptionFactory",
             "src": "contracts/SubscriptionFactory.sol:19"
           },
@@ -381,7 +381,7 @@
             "label": "security",
             "offset": 0,
             "slot": "104",
-            "type": "t_contract(CicleoSubscriptionSecurity)7095",
+            "type": "t_contract(CicleoSubscriptionSecurity)4911",
             "contract": "CicleoSubscriptionFactory",
             "src": "contracts/SubscriptionFactory.sol:25"
           },
@@ -419,11 +419,11 @@
             "label": "bool",
             "numberOfBytes": "1"
           },
-          "t_contract(CicleoSubscriptionSecurity)7095": {
+          "t_contract(CicleoSubscriptionSecurity)4911": {
             "label": "contract CicleoSubscriptionSecurity",
             "numberOfBytes": "20"
           },
-          "t_contract(IRouter)7225": {
+          "t_contract(IRouter)5041": {
             "label": "contract IRouter",
             "numberOfBytes": "20"
           },
@@ -916,6 +916,934 @@
             "numberOfBytes": "64"
           },
           "t_struct(SubscriptionStruct)7223_storage": {
+            "label": "struct SubscriptionStruct",
+            "members": [
+              {
+                "label": "price",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "isActive",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "name",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "2"
+              }
+            ],
+            "numberOfBytes": "96"
+          },
+          "t_uint16": {
+            "label": "uint16",
+            "numberOfBytes": "2"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    },
+    "c56b475afb73dde6e87ed7cae2d01e3a6f1961f005e9ba78e4ca8f1d51702745": {
+      "address": "0x360b8EB9a9A42cfbFFfA19783eB1266Ac7a131f0",
+      "txHash": "0xe34afd4f6faec67676b4f087a0336288c7750903f4b86ad94fd25a00ea27b732",
+      "layout": {
+        "solcVersion": "0.8.9",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "idCount",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_uint256",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:16"
+          },
+          {
+            "label": "routerSwap",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_contract(IRouter)7607",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:19"
+          },
+          {
+            "label": "routerSubscription",
+            "offset": 0,
+            "slot": "103",
+            "type": "t_address",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:22"
+          },
+          {
+            "label": "security",
+            "offset": 0,
+            "slot": "104",
+            "type": "t_contract(CicleoSubscriptionSecurity)7477",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:25"
+          },
+          {
+            "label": "ids",
+            "offset": 0,
+            "slot": "105",
+            "type": "t_mapping(t_uint256,t_address)",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:28"
+          },
+          {
+            "label": "subscriptionManagerId",
+            "offset": 0,
+            "slot": "106",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:31"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_contract(CicleoSubscriptionSecurity)7477": {
+            "label": "contract CicleoSubscriptionSecurity",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IRouter)7607": {
+            "label": "contract IRouter",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_address)": {
+            "label": "mapping(uint256 => address)",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    },
+    "f5aca7d1060e02891733f1b5d21c46f130c6198571280beb1ebb22a566107b0e": {
+      "address": "0x50D2Be7c8B31995F22E95108614F6c3D2faD7A6D",
+      "txHash": "0x76cd64c82c5d6df6a7fa4295b6e9b3d2ef9edc54dda04aeb10dd7e91d31c7cfa",
+      "layout": {
+        "solcVersion": "0.8.9",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "security",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_contract(CicleoSubscriptionSecurity)7731",
+            "contract": "CicleoSubscriptionRouter",
+            "src": "contracts/SubscriptionRouter.sol:20"
+          },
+          {
+            "label": "factory",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_contract(CicleoSubscriptionFactory)4292",
+            "contract": "CicleoSubscriptionRouter",
+            "src": "contracts/SubscriptionRouter.sol:23"
+          },
+          {
+            "label": "taxAccount",
+            "offset": 0,
+            "slot": "103",
+            "type": "t_address",
+            "contract": "CicleoSubscriptionRouter",
+            "src": "contracts/SubscriptionRouter.sol:26"
+          },
+          {
+            "label": "botAccount",
+            "offset": 0,
+            "slot": "104",
+            "type": "t_address",
+            "contract": "CicleoSubscriptionRouter",
+            "src": "contracts/SubscriptionRouter.sol:29"
+          },
+          {
+            "label": "bridgeExecutor",
+            "offset": 0,
+            "slot": "105",
+            "type": "t_address",
+            "contract": "CicleoSubscriptionRouter",
+            "src": "contracts/SubscriptionRouter.sol:32"
+          },
+          {
+            "label": "taxPercentage",
+            "offset": 20,
+            "slot": "105",
+            "type": "t_uint16",
+            "contract": "CicleoSubscriptionRouter",
+            "src": "contracts/SubscriptionRouter.sol:35"
+          },
+          {
+            "label": "subscriptions",
+            "offset": 0,
+            "slot": "106",
+            "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_struct(SubscriptionStruct)7799_storage))",
+            "contract": "CicleoSubscriptionRouter",
+            "src": "contracts/SubscriptionRouter.sol:38"
+          },
+          {
+            "label": "subscriptionNumber",
+            "offset": 0,
+            "slot": "107",
+            "type": "t_mapping(t_uint256,t_uint8)",
+            "contract": "CicleoSubscriptionRouter",
+            "src": "contracts/SubscriptionRouter.sol:42"
+          },
+          {
+            "label": "users",
+            "offset": 0,
+            "slot": "108",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_struct(DynamicSubscriptionData)7815_storage))",
+            "contract": "CicleoSubscriptionRouter",
+            "src": "contracts/SubscriptionRouter.sol:45"
+          },
+          {
+            "label": "userReferral",
+            "offset": 0,
+            "slot": "109",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_address))",
+            "contract": "CicleoSubscriptionRouter",
+            "src": "contracts/SubscriptionRouter.sol:49"
+          },
+          {
+            "label": "referralPercent",
+            "offset": 0,
+            "slot": "110",
+            "type": "t_mapping(t_uint256,t_uint16)",
+            "contract": "CicleoSubscriptionRouter",
+            "src": "contracts/SubscriptionRouter.sol:52"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_contract(CicleoSubscriptionFactory)4292": {
+            "label": "contract CicleoSubscriptionFactory",
+            "numberOfBytes": "20"
+          },
+          "t_contract(CicleoSubscriptionSecurity)7731": {
+            "label": "contract CicleoSubscriptionSecurity",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_address)": {
+            "label": "mapping(address => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(DynamicSubscriptionData)7815_storage)": {
+            "label": "mapping(address => struct DynamicSubscriptionData)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_mapping(t_address,t_address))": {
+            "label": "mapping(uint256 => mapping(address => address))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_mapping(t_address,t_struct(DynamicSubscriptionData)7815_storage))": {
+            "label": "mapping(uint256 => mapping(address => struct DynamicSubscriptionData))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_mapping(t_uint256,t_struct(SubscriptionStruct)7799_storage))": {
+            "label": "mapping(uint256 => mapping(uint256 => struct SubscriptionStruct))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(SubscriptionStruct)7799_storage)": {
+            "label": "mapping(uint256 => struct SubscriptionStruct)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_uint16)": {
+            "label": "mapping(uint256 => uint16)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_uint8)": {
+            "label": "mapping(uint256 => uint8)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_struct(DynamicSubscriptionData)7815_storage": {
+            "label": "struct DynamicSubscriptionData",
+            "members": [
+              {
+                "label": "name",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "price",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_struct(SubscriptionStruct)7799_storage": {
+            "label": "struct SubscriptionStruct",
+            "members": [
+              {
+                "label": "price",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "isActive",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "name",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "2"
+              }
+            ],
+            "numberOfBytes": "96"
+          },
+          "t_uint16": {
+            "label": "uint16",
+            "numberOfBytes": "2"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    },
+    "d5e09584a84f599f795d64d8d04fcdae04f37122e8834593595aaf9a5109531b": {
+      "address": "0xb72227e5913941A5d06f2a40F078Bdf501764Ce9",
+      "txHash": "0x5e44987ff3b891dbef1b36957c2a7295825819cdebcf746280106ef6cae2e500",
+      "layout": {
+        "solcVersion": "0.8.9",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "idCount",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_uint256",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:16"
+          },
+          {
+            "label": "routerSwap",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_contract(IRouter)5184",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:19"
+          },
+          {
+            "label": "routerSubscription",
+            "offset": 0,
+            "slot": "103",
+            "type": "t_address",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:22"
+          },
+          {
+            "label": "security",
+            "offset": 0,
+            "slot": "104",
+            "type": "t_contract(CicleoSubscriptionSecurity)5054",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:25"
+          },
+          {
+            "label": "ids",
+            "offset": 0,
+            "slot": "105",
+            "type": "t_mapping(t_uint256,t_address)",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:28"
+          },
+          {
+            "label": "subscriptionManagerId",
+            "offset": 0,
+            "slot": "106",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:31"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_contract(CicleoSubscriptionSecurity)5054": {
+            "label": "contract CicleoSubscriptionSecurity",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IRouter)5184": {
+            "label": "contract IRouter",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_address)": {
+            "label": "mapping(uint256 => address)",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    },
+    "ebef8196073c31d276d648e46f16fccdfdee62cb1b255abb78a432ee190b7c1a": {
+      "address": "0x1Fdcc5C840cD19a472755A0D7489405Ed63524bA",
+      "txHash": "0xc60fd682b819cb3e2cc9645f8ced7908fa8ba07398fef2b8e37744e1beadaea9",
+      "layout": {
+        "solcVersion": "0.8.9",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "idCount",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_uint256",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:16"
+          },
+          {
+            "label": "routerSwap",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_contract(IRouter)7625",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:19"
+          },
+          {
+            "label": "routerSubscription",
+            "offset": 0,
+            "slot": "103",
+            "type": "t_address",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:22"
+          },
+          {
+            "label": "security",
+            "offset": 0,
+            "slot": "104",
+            "type": "t_contract(CicleoSubscriptionSecurity)7495",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:25"
+          },
+          {
+            "label": "ids",
+            "offset": 0,
+            "slot": "105",
+            "type": "t_mapping(t_uint256,t_address)",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:28"
+          },
+          {
+            "label": "subscriptionManagerId",
+            "offset": 0,
+            "slot": "106",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "CicleoSubscriptionFactory",
+            "src": "contracts/SubscriptionFactory.sol:31"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_contract(CicleoSubscriptionSecurity)7495": {
+            "label": "contract CicleoSubscriptionSecurity",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IRouter)7625": {
+            "label": "contract IRouter",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_address)": {
+            "label": "mapping(uint256 => address)",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    },
+    "8ba3f41a2b973bf39a1912409909713049241f27e2da6d0e331792e50c8efacc": {
+      "address": "0x20Dd21A592464385c7a6b34A9930304DFFf46809",
+      "txHash": "0xbf911968e452b690835abed6b9c83ad9226f107fe213949d29bcc36c97500512",
+      "layout": {
+        "solcVersion": "0.8.9",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "security",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_contract(CicleoSubscriptionSecurity)7495",
+            "contract": "CicleoSubscriptionRouter",
+            "src": "contracts/SubscriptionRouter.sol:20"
+          },
+          {
+            "label": "factory",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_contract(CicleoSubscriptionFactory)4032",
+            "contract": "CicleoSubscriptionRouter",
+            "src": "contracts/SubscriptionRouter.sol:23"
+          },
+          {
+            "label": "taxAccount",
+            "offset": 0,
+            "slot": "103",
+            "type": "t_address",
+            "contract": "CicleoSubscriptionRouter",
+            "src": "contracts/SubscriptionRouter.sol:26"
+          },
+          {
+            "label": "botAccount",
+            "offset": 0,
+            "slot": "104",
+            "type": "t_address",
+            "contract": "CicleoSubscriptionRouter",
+            "src": "contracts/SubscriptionRouter.sol:29"
+          },
+          {
+            "label": "bridgeExecutor",
+            "offset": 0,
+            "slot": "105",
+            "type": "t_address",
+            "contract": "CicleoSubscriptionRouter",
+            "src": "contracts/SubscriptionRouter.sol:32"
+          },
+          {
+            "label": "taxPercentage",
+            "offset": 20,
+            "slot": "105",
+            "type": "t_uint16",
+            "contract": "CicleoSubscriptionRouter",
+            "src": "contracts/SubscriptionRouter.sol:35"
+          },
+          {
+            "label": "subscriptions",
+            "offset": 0,
+            "slot": "106",
+            "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_struct(SubscriptionStruct)7563_storage))",
+            "contract": "CicleoSubscriptionRouter",
+            "src": "contracts/SubscriptionRouter.sol:38"
+          },
+          {
+            "label": "subscriptionNumber",
+            "offset": 0,
+            "slot": "107",
+            "type": "t_mapping(t_uint256,t_uint8)",
+            "contract": "CicleoSubscriptionRouter",
+            "src": "contracts/SubscriptionRouter.sol:42"
+          },
+          {
+            "label": "users",
+            "offset": 0,
+            "slot": "108",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_struct(DynamicSubscriptionData)7579_storage))",
+            "contract": "CicleoSubscriptionRouter",
+            "src": "contracts/SubscriptionRouter.sol:45"
+          },
+          {
+            "label": "userReferral",
+            "offset": 0,
+            "slot": "109",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_address))",
+            "contract": "CicleoSubscriptionRouter",
+            "src": "contracts/SubscriptionRouter.sol:49"
+          },
+          {
+            "label": "referralPercent",
+            "offset": 0,
+            "slot": "110",
+            "type": "t_mapping(t_uint256,t_uint16)",
+            "contract": "CicleoSubscriptionRouter",
+            "src": "contracts/SubscriptionRouter.sol:52"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_contract(CicleoSubscriptionFactory)4032": {
+            "label": "contract CicleoSubscriptionFactory",
+            "numberOfBytes": "20"
+          },
+          "t_contract(CicleoSubscriptionSecurity)7495": {
+            "label": "contract CicleoSubscriptionSecurity",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_address)": {
+            "label": "mapping(address => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(DynamicSubscriptionData)7579_storage)": {
+            "label": "mapping(address => struct DynamicSubscriptionData)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_mapping(t_address,t_address))": {
+            "label": "mapping(uint256 => mapping(address => address))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_mapping(t_address,t_struct(DynamicSubscriptionData)7579_storage))": {
+            "label": "mapping(uint256 => mapping(address => struct DynamicSubscriptionData))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_mapping(t_uint256,t_struct(SubscriptionStruct)7563_storage))": {
+            "label": "mapping(uint256 => mapping(uint256 => struct SubscriptionStruct))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(SubscriptionStruct)7563_storage)": {
+            "label": "mapping(uint256 => struct SubscriptionStruct)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_uint16)": {
+            "label": "mapping(uint256 => uint16)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_uint8)": {
+            "label": "mapping(uint256 => uint8)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_struct(DynamicSubscriptionData)7579_storage": {
+            "label": "struct DynamicSubscriptionData",
+            "members": [
+              {
+                "label": "name",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "price",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_struct(SubscriptionStruct)7563_storage": {
             "label": "struct SubscriptionStruct",
             "members": [
               {

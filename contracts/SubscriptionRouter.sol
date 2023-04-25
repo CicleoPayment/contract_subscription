@@ -618,20 +618,24 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
                 newSubscriptionId,
                 difference
             );
+
+            emit SelectToken(
+                subscriptionManagerId,
+                msg.sender,
+                address(subManager.token())
+            );
         }
     }
 
     /// @notice Function to change subscription type with swap
     /// @param subscriptionManagerId Id of the submanager
     /// @param newSubscriptionId Id of the new subscription
-    /// @param price Price of the subscription
     /// @param executor Executor contract (OpenOcean part)
     /// @param desc Swap description (OpenOcean part)
     /// @param calls Calls to execute (OpenOcean part)
     function changeSubscriptionWithSwap(
         uint256 subscriptionManagerId,
         uint8 newSubscriptionId,
-        uint256 price,
         IOpenOceanCaller executor,
         SwapDescription memory desc,
         IOpenOceanCaller.CallDescription[] calldata calls
@@ -685,11 +689,14 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
             oldSubscriptionId
         ].price;
 
-        uint256 difference = subManager.changeSubscription(
+        uint256 difference = subManager.changeSubscriptionWithSwap(
             msg.sender,
             oldPrice,
             newPrice,
-            newSubscriptionId
+            newSubscriptionId,
+            executor,
+            desc,
+            calls
         );
 
         emit UserEdited(
@@ -700,22 +707,24 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
         );
 
         if (difference > 0) {
-            payFunctionWithSwap(
+            redistributeToken(
+                difference,
+                subManager,
                 subscriptionManagerId,
-                newSubscriptionId,
-                executor,
-                desc,
-                calls,
-                msg.sender,
-                price,
-                block.timestamp + subManager.subscriptionDuration()
+                msg.sender
             );
-
+            
             emit PaymentSubscription(
                 subscriptionManagerId,
                 msg.sender,
                 newSubscriptionId,
                 difference
+            );
+
+            emit SelectToken(
+                subscriptionManagerId,
+                msg.sender,
+                address(subManager.token())
             );
         }
     }
@@ -743,7 +752,7 @@ contract CicleoSubscriptionRouter is OwnableUpgradeable {
             newSubscriptionId
         ].price;
 
-        if (oldSubscriptionId == 0 || isActive == false) {
+        if (oldSubscriptionId == 0 || isActive == false || oldPrice == 0) {
             return newPrice;
         }
 
