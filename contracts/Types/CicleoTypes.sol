@@ -35,6 +35,7 @@ struct SubscriptionManagerStruct {
     SubscriptionStruct[] subscriptions;
     address[] owners;
     uint256 subscriptionDuration;
+    uint16 referralPercent;
 }
 
 struct SubscriptionStruct {

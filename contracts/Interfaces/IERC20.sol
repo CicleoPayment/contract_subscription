@@ -20,8 +20,7 @@ interface IERC20 {
     /**
      * @dev Returns the token decimal count.
      */
-    function decimals() external view  returns (uint8);
-
+    function decimals() external view returns (uint8);
 
     /**
      * @dev Returns the token symbol.
@@ -44,7 +43,10 @@ interface IERC20 {
      *
      * This value changes when {approve} or {transferFrom} are called.
      */
-    function allowance(address owner, address spender) external view returns (uint256);
+    function allowance(
+        address owner,
+        address spender
+    ) external view returns (uint256);
 
     /**
      * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
@@ -89,5 +91,9 @@ interface IERC20 {
      * @dev Emitted when the allowance of a `spender` for an `owner` is set by
      * a call to {approve}. `value` is the new allowance.
      */
-    event Approval(address indexed owner, address indexed spender, uint256 value);
+    event Approval(
+        address indexed owner,
+        address indexed spender,
+        uint256 value
+    );
 }
