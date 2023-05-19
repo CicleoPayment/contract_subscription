@@ -8,6 +8,7 @@ import {CicleoSubscriptionFactory} from "./../../SubscriptionFactory.sol";
 import {CicleoSubscriptionManager} from "./../../SubscriptionFactory.sol";
 import {SubscriptionStruct, UserData, SubscriptionManagerStruct, MinimifiedSubscriptionManagerStruct, IOpenOceanCaller, SwapDescription, DynamicSubscriptionData} from "./../../Types/CicleoTypes.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "hardhat/console.sol";
 
 contract PaymentFacet {
     bytes32 internal constant NAMESPACE =
@@ -263,7 +264,6 @@ contract PaymentFacet {
             return
                 subManager.getAmountChangeSubscription(
                     user,
-                    oldPrice,
                     newPrice
                 );
         } else {
@@ -282,7 +282,7 @@ contract PaymentFacet {
             LibAdmin.ids(subscriptionManagerId)
         );
 
-        (uint256 endDate, uint8 oldSubscriptionId, , , ) = subManager.users(
+        (uint256 endDate, uint8 oldSubscriptionId, , , , ) = subManager.users(
             msg.sender
         );
 
@@ -377,7 +377,7 @@ contract PaymentFacet {
             LibAdmin.ids(subscriptionManagerId)
         );
 
-        (uint256 endDate, uint8 oldSubscriptionId, , , ) = subManager.users(
+        (uint256 endDate, uint8 oldSubscriptionId, , , , ) = subManager.users(
             msg.sender
         );
 
@@ -840,6 +840,10 @@ contract PaymentFacet {
             msg.sender,
             referralTaxPercent
         );
+    }
+
+    function taxAccount() external view returns (address) {
+        return getStorage().taxAccount;
     }
 
     //----Diamond storage functions-------------------------------------//

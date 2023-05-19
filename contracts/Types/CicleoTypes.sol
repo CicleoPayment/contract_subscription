@@ -48,8 +48,10 @@ struct UserData {
     uint256 subscriptionEndDate;
     uint8 subscriptionId;
     uint256 subscriptionLimit;
-    uint256 lastPayment;
+    uint256 lastPaymentTime;
+    uint256 totalPaidThisPeriod;
     bool canceled;
+
 }
 
 struct DynamicSubscriptionData {

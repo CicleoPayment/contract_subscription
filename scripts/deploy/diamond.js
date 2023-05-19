@@ -1,6 +1,7 @@
 /* global ethers */
 /* eslint prefer-const: "off" */
 
+const { ethers } = require("hardhat");
 const { getSelectors, FacetCutAction } = require("./libraries/diamond.js");
 
 async function deployDiamond() {
@@ -11,6 +12,7 @@ async function deployDiamond() {
     const DiamondCutFacet = await ethers.getContractFactory("DiamondCutFacet");
     const diamondCutFacet = await DiamondCutFacet.deploy();
     await diamondCutFacet.deployed();
+    //const diamondCutFacet = await ethers.getContractAt("DiamondCutFacet", "0xCBf4077c4919fcC019d0B47F157480C4CC985c7d")
 
     console.log("DiamondCutFacet deployed:", diamondCutFacet.address);
 

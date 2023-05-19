@@ -203,7 +203,7 @@ contract SubscriptionTypesFacet {
 
     function subscriptions(
         uint256 subscriptionManagerId,
-        uint16 subscriptionId
+        uint8 subscriptionId
     ) external view returns (SubscriptionStruct memory) {
         Storage storage s = getStorage();
         return s.subscriptions[subscriptionManagerId][subscriptionId];

@@ -120,7 +120,7 @@ contract CicleoSubscriptionManager {
         require(users[user].canceled == false, "Subscription is canceled");
 
         require(
-            users[user].lastPayment < block.timestamp - subscriptionDuration,
+            users[user].lastPaymentTime < block.timestamp - subscriptionDuration,
             "You cannot pay twice in the same period"
         );
 
@@ -143,10 +143,16 @@ contract CicleoSubscriptionManager {
 
         //Save subscription info
 
-        users[user].subscriptionEndDate = endDate;
-        users[user].subscriptionId = subscriptionId;
-        users[user].lastPayment = block.timestamp;
-        users[user].canceled = false;
+        UserData storage _user = users[user];
+
+        users[user] = UserData(
+            endDate,
+            subscriptionId,
+            _user.subscriptionLimit,
+            block.timestamp,
+            price,
+            false
+        );
     }
 
     /// @notice Function to pay subscription with swap (OpenOcean)
@@ -172,7 +178,7 @@ contract CicleoSubscriptionManager {
         require(users[user].canceled == false, "Subscription is canceled");
 
         require(
-            users[user].lastPayment < block.timestamp - subscriptionDuration,
+            users[user].lastPaymentTime < block.timestamp - subscriptionDuration,
             "You cannot pay twice in the same period"
         );
 
@@ -201,11 +207,17 @@ contract CicleoSubscriptionManager {
         token.transfer(routerSubscription, balanceAfter);
 
         //Save subscription info
+        
+        UserData storage _user = users[user];
 
-        users[user].subscriptionEndDate = endDate;
-        users[user].subscriptionId = subscriptionId;
-        users[user].lastPayment = block.timestamp;
-        users[user].canceled = false;
+        users[user] = UserData(
+            endDate,
+            subscriptionId,
+            _user.subscriptionLimit,
+            block.timestamp,
+            price,
+            false
+        );
     }
 
     /// @notice Function to cancel / stop subscription
@@ -296,7 +308,8 @@ contract CicleoSubscriptionManager {
             subscriptionEndDate,
             subscriptionId,
             _user.subscriptionLimit,
-            _user.lastPayment,
+            _user.lastPaymentTime,
+            _user.totalPaidThisPeriod,
             _user.canceled
         );
     }
@@ -314,6 +327,7 @@ contract CicleoSubscriptionManager {
     ) external returns (uint256 toPay) {
         address routerSubscription = factory.routerSubscription();
         require(msg.sender == routerSubscription, "Not allowed to");
+        require(subscriptionId != 0 && subscriptionId != 255, "Wrong sub id");
 
         UserData memory _user = users[user];
 
@@ -322,13 +336,16 @@ contract CicleoSubscriptionManager {
 
             uint256 priceAdjusted = getAmountChangeSubscription(
                 user,
-                oldPrice,
                 newPrice
             );
 
             token.transferFrom(user, routerSubscription, priceAdjusted);
 
             toPay = priceAdjusted;
+
+            if (oldPrice == 0) {
+                _user.subscriptionEndDate = block.timestamp + subscriptionDuration;
+            }
         }
 
         //Change the id of subscription
@@ -336,7 +353,8 @@ contract CicleoSubscriptionManager {
             _user.subscriptionEndDate,
             subscriptionId,
             _user.subscriptionLimit,
-            _user.lastPayment,
+            _user.lastPaymentTime,
+            newPrice > oldPrice ? newPrice : _user.totalPaidThisPeriod,
             _user.canceled
         );
     }
@@ -357,6 +375,7 @@ contract CicleoSubscriptionManager {
     ) external returns (uint256 toPay) {
         address routerSubscription = factory.routerSubscription();
         require(msg.sender == routerSubscription, "Not allowed to");
+        require(subscriptionId != 0 && subscriptionId != 255, "Wrong sub id");
 
         UserData memory _user = users[user];
 
@@ -365,7 +384,6 @@ contract CicleoSubscriptionManager {
 
             uint256 priceAdjusted = getAmountChangeSubscription(
                 user,
-                oldPrice,
                 newPrice
             );
 
@@ -395,23 +413,27 @@ contract CicleoSubscriptionManager {
             _user.subscriptionEndDate,
             subscriptionId,
             _user.subscriptionLimit,
-            _user.lastPayment,
+            _user.lastPaymentTime,
+            newPrice > oldPrice ? newPrice : _user.totalPaidThisPeriod,
             _user.canceled
         );
     }
 
     function getAmountChangeSubscription(
         address user,
-        uint256 oldPrice,
         uint256 newPrice
     ) public view returns (uint256) {
         UserData memory _user = users[user];
 
+        uint256 totalPayedThisPeriod = _user.totalPaidThisPeriod;
+
         uint256 currentTime = block.timestamp; 
         uint256 timeToNextPayment = _user.subscriptionEndDate;
 
-        uint256 newPriceAdjusted = ((newPrice - oldPrice) *
-            (timeToNextPayment - currentTime)) / subscriptionDuration;     
+        if ( totalPayedThisPeriod == 0) return newPrice;
+    
+        uint256 newPriceAdjusted = ((newPrice - totalPayedThisPeriod) *
+            (timeToNextPayment - currentTime)) / subscriptionDuration;
 
         return newPriceAdjusted;
     }

@@ -7,7 +7,7 @@ import "hardhat/console.sol";
 import "./Interfaces/IERC20.sol";
 import {SwapDescription, SubscriptionStruct, UserData, IRouter, IOpenOceanCaller} from "./Types/CicleoTypes.sol";
 import {CicleoSubscriptionFactory} from "./SubscriptionFactory.sol";
-import "./Router/facets/BridgeFacet.sol";
+import "./LibBridgeManager.sol";
 
 /// @notice Interface of the LiFi Diamond
 interface ILiFiDiamond {
@@ -37,16 +37,22 @@ interface ICicleoRouter {
     ) external view returns (address);
 }
 
+struct UserBridgeData {
+    /// @notice last payment in timestamp to define when bot can take in the account
+    uint256 nextPaymentTime;
+    /// @notice Duration of the sub in secs
+    uint256 subscriptionDuration;
+    /// @notice Limit in subtoken
+    uint256 subscriptionLimit;
+}
+
 /// @title Cicleo Subscription Bridge Manager
 /// @author Pol Epie
 /// @notice This contract is used to permit the payment via LiFi
 contract CicleoSubscriptionBridgeManager {
-    /// @notice users Mapping of the networkID to a mapping of the subscription manager id to the user address to the subscription approval
-    mapping(uint256 => mapping(uint256 => mapping(address => uint256)))
-        public usersSubscriptionLimit;
-
-    /// @notice Mapping of the networkID to a mapping of the subscription manager id to last payment in timestamp to define when bot can take in the account
-    mapping(uint256 => mapping(uint256 => mapping(address => uint256))) lastPayment;
+    /// @notice users Mapping of the networkID to a mapping of the subscription manager id to the user address to the user info
+    mapping(uint256 => mapping(uint256 => mapping(address => UserBridgeData)))
+        public users;
 
     /// @notice lifi diamond to bridge
     ILiFiDiamond public lifi;
@@ -81,9 +87,8 @@ contract CicleoSubscriptionBridgeManager {
         uint256 subscriptionManagerId,
         uint256 amountMaxPerPeriod
     ) external {
-        usersSubscriptionLimit[chainId][subscriptionManagerId][
-            msg.sender
-        ] = amountMaxPerPeriod;
+        users[chainId][subscriptionManagerId][msg.sender]
+            .subscriptionLimit = amountMaxPerPeriod;
 
         emit EditSubscriptionLimit(
             msg.sender,
@@ -95,200 +100,109 @@ contract CicleoSubscriptionBridgeManager {
 
     //-----Bridge thing internal function
 
-    /// @notice Encode the destination calldata
-    /// @param user User to pay the subscription
-    /// @param subManagerId Id of the submanager
-    /// @param subscriptionId Id of the subscription
-    /// @param signature Signature of the user
-    function getSubscribeDestinationCalldata(
+
+    function paymentWithBridge(
+        PaymentParameters memory paymentParams,
         address user,
-        uint256 subManagerId,
-        uint8 subscriptionId,
-        uint256 paymentChainId,
-        address paymentToken,
-        uint256 price,
-        address referral,
-        bytes memory signature
-    ) public pure returns (bytes memory) {
-        bytes4 selector = BridgeFacet.bridgeSubscribe.selector;
-        return
-            abi.encodeWithSelector(
-                selector,
-                subManagerId,
-                subscriptionId,
-                user,
-                paymentChainId,
-                paymentToken,
-                price,
-                referral,
-                signature
+        ILiFi.BridgeData memory _bridgeData,
+        LibSwap.SwapData[] calldata _swapData,
+        StargateData memory _stargateData
+    ) internal {
+        uint256 balanceBefore = paymentParams.token.balanceOf(address(this));
+
+        paymentParams.token.transferFrom(user, address(this), _bridgeData.minAmount);
+
+        users[paymentParams.chainId][paymentParams.subscriptionManagerId][user].nextPaymentTime =
+            block.timestamp +
+            users[paymentParams.chainId][paymentParams.subscriptionManagerId][user].subscriptionDuration;
+
+        //Verify if we received correct amount of token
+        require(
+            paymentParams.token.balanceOf(address(this)) - balanceBefore >=
+                _bridgeData.minAmount,
+            "Transfer failed"
+        );
+
+        //Approve the LiFi Diamond to spend the token
+        paymentParams.token.approve(address(lifi), _bridgeData.minAmount);
+
+        require(msg.value == _stargateData.lzFee, "Error msg.value");
+
+        //Bridge the call
+        if (_swapData.length > 0) {
+            lifi.swapAndStartBridgeTokensViaStargate{value: msg.value}(
+                _bridgeData,
+                _swapData,
+                _stargateData
             );
-    }
-
-    /// @notice Encode the destination calldata
-    /// @param user User to pay the subscription
-    /// @param subManagerId Id of the submanager
-    function getRenewDestinationCalldata(
-        address user,
-        uint256 subManagerId
-    ) public pure returns (bytes memory) {
-        bytes4 selector = BridgeFacet.bridgeRenew.selector;
-        return abi.encodeWithSelector(selector, subManagerId, user);
-    }
-
-    /// @notice Change the destination call from LiFi parameter
-    /// @param originalCalldata Original calldata
-    /// @param dstCalldata Destination calldata
-    /// @return finalCallData New calldata
-    function changeDestinationCalldata(
-        bytes memory originalCalldata,
-        bytes memory dstCalldata
-    ) public pure returns (bytes memory finalCallData) {
-        (
-            uint256 txId,
-            LibSwap.SwapData[] memory swapData,
-            address assetId,
-            address receiver
-        ) = abi.decode(
-                originalCalldata,
-                (uint256, LibSwap.SwapData[], address, address)
+        } else {
+            lifi.startBridgeTokensViaStargate{value: msg.value}(
+                _bridgeData,
+                _stargateData
             );
-
-        swapData[swapData.length - 1].callData = dstCalldata;
-
-        return abi.encode(txId, swapData, assetId, receiver);
+        }
     }
 
     //-----Bridge pay external function
 
     /// @notice Function to pay subscription with any coin on another chain
-    /// @param chainId Chain id where the submanager is
-    /// @param subscriptionManagerId Id of the submanager
-    /// @param token Token used to pay the subscription
     function payFunctionWithBridge(
-        uint256 chainId,
-        uint256 subscriptionManagerId,
-        uint8 subscriptionId,
-        IERC20 token,
+        PaymentParameters memory paymentParams,
         ILiFi.BridgeData memory _bridgeData,
         LibSwap.SwapData[] calldata _swapData,
         StargateData memory _stargateData,
         address referral,
+        uint256 duration,
         bytes calldata signature
     ) external payable {
         require(
-            usersSubscriptionLimit[chainId][subscriptionManagerId][
-                msg.sender
-            ] >= _bridgeData.minAmount,
+            users[paymentParams.chainId][paymentParams.subscriptionManagerId][msg.sender]
+                .subscriptionLimit >= paymentParams.priceInSubToken,
             "Amount too high"
         );
 
-        uint256 balanceBefore = token.balanceOf(address(this));
-
-        token.transferFrom(msg.sender, address(this), _bridgeData.minAmount);
-
-        //Verify if we received correct amount of token
-        require(
-            token.balanceOf(address(this)) - balanceBefore >= _bridgeData.minAmount,
-            "Transfer failed"
-        );
-
-        //Approve the LiFi Diamond to spend the token
-        token.approve(address(lifi), _bridgeData.minAmount);
-
-        //Prepare the call to do on the dest chain
-        bytes memory destCall = getSubscribeDestinationCalldata(
+        //Remplace the destination call by our one
+        _stargateData.callData = LibBridgeManager.handleSubscriptionCallback(
+            paymentParams,
             msg.sender,
-            subscriptionManagerId,
-            subscriptionId,
             LibAdmin.getChainID(),
-            address(token),
-            _bridgeData.minAmount,
             referral,
-            signature
+            signature,
+            _stargateData.callData
         );
 
-        //Remplace the destination by our one
-        bytes memory newCalldata = changeDestinationCalldata(
-            _stargateData.callData,
-            destCall
-        );
+        users[paymentParams.chainId][paymentParams.subscriptionManagerId][msg.sender]
+                    .subscriptionDuration = duration;
 
-        _stargateData.callData = newCalldata;
-
-        require(msg.value == _stargateData.lzFee, "Error msg.value");
-
-        //Bridge the call
-        if (_swapData.length > 0) {
-            lifi.swapAndStartBridgeTokensViaStargate{value: msg.value}(
-                _bridgeData,
-                _swapData,
-                _stargateData
-            );
-        } else {
-            lifi.startBridgeTokensViaStargate{value: msg.value}(
-                _bridgeData,
-                _stargateData
-            );
-        }
+        paymentWithBridge(paymentParams, msg.sender, _bridgeData, _swapData, _stargateData);
     }
 
     function renewSubscriptionByBridge(
-        uint256 subscriptionManagerId,
-        uint256 chainId,
+        PaymentParameters memory paymentParams,
         address user,
-        IERC20 token,
         ILiFi.BridgeData memory _bridgeData,
         LibSwap.SwapData[] calldata _swapData,
         StargateData memory _stargateData
     ) public payable {
-        uint256 price = _bridgeData.minAmount;
-
         require(
-            usersSubscriptionLimit[chainId][subscriptionManagerId][
-                user
-            ] >= _stargateData.minAmountLD,
+            users[paymentParams.chainId][paymentParams.subscriptionManagerId][user].subscriptionLimit >=
+                paymentParams.priceInSubToken,
             "Amount too high"
         );
 
-        uint256 balanceBefore = token.balanceOf(address(this));
+        require(
+            users[paymentParams.chainId][paymentParams.subscriptionManagerId][user].nextPaymentTime <
+                block.timestamp,
+            "Too late"
+        );
 
-        token.transferFrom(user, address(this), price);
-
-        //Verify if we received correct amount of token
-        require(token.balanceOf(address(this)) - balanceBefore >= price, "Transfer failed");
-
-        //Approve the LiFi Diamond to spend the token
-        token.approve(address(lifi), price);
-
-        //Prepare the call to do on the dest chain
-        bytes memory destCall = getRenewDestinationCalldata(
+        //Remplace the destination call by our one
+        _stargateData.callData = LibBridgeManager.handleRenewCallback(
+            paymentParams,
             user,
-            subscriptionManagerId
+            _stargateData.callData
         );
 
-        //Remplace the destination by our one
-        bytes memory newCalldata = changeDestinationCalldata(
-            _stargateData.callData,
-            destCall
-        );
-
-        _stargateData.callData = newCalldata;
-
-        require(msg.value == _stargateData.lzFee, "Error msg.value");
-
-        //Bridge the call
-        if (_swapData.length > 0) {
-            lifi.swapAndStartBridgeTokensViaStargate{value: msg.value}(
-                _bridgeData,
-                _swapData,
-                _stargateData
-            );
-        } else {
-            lifi.startBridgeTokensViaStargate{value: msg.value}(
-                _bridgeData,
-                _stargateData
-            );
-        }
+        paymentWithBridge(paymentParams, user, _bridgeData, _swapData, _stargateData);
     }
 }

@@ -1,10 +1,95 @@
 const { expect } = require("chai");
 const { BigNumber, utils } = require("ethers");
 const { ethers, waffle } = require("hardhat");
+const {
+    getSelectors,
+    FacetCutAction,
+} = require("./../scripts/deploy/libraries/diamond.js");
 const provider = waffle.provider;
 
+function sign(signer, data) {
+    return signer.signMessage(data)
+}
+
+const deployDiamond = async (contractOwner) => {
+    // deploy DiamondCutFacet
+    const DiamondCutFacet = await ethers.getContractFactory("DiamondCutFacet");
+    const diamondCutFacet = await DiamondCutFacet.deploy();
+    await diamondCutFacet.deployed();
+    //const diamondCutFacet = await ethers.getContractAt("DiamondCutFacet", "0xCBf4077c4919fcC019d0B47F157480C4CC985c7d")
+
+    //console.log("DiamondCutFacet deployed:", diamondCutFacet.address);
+
+    // deploy Diamond
+    const Diamond = await ethers.getContractFactory("Diamond");
+    const diamond = await Diamond.deploy(
+        contractOwner.address,
+        diamondCutFacet.address
+    );
+    await diamond.deployed();
+    //console.log("Diamond deployed:", diamond.address);
+
+    // deploy DiamondInit
+    // DiamondInit provides a function that is called when the diamond is upgraded to initialize state variables
+    // Read about how the diamondCut function works here: https://eips.ethereum.org/EIPS/eip-2535#addingreplacingremoving-functions
+    const DiamondInit = await ethers.getContractFactory("DiamondInit");
+    const diamondInit = await DiamondInit.deploy();
+    await diamondInit.deployed();
+    //console.log("DiamondInit deployed:", diamondInit.address);
+
+    // deploy facets
+    //console.log("");
+    //console.log("Deploying facets");
+    const FacetNames = [
+        "DiamondLoupeFacet",
+        "AdminFacet",
+        "BridgeFacet",
+        "SubscriptionTypesFacet",
+        "PaymentFacet",
+    ];
+    const cut = [];
+    const facets = {};
+    for (const FacetName of FacetNames) {
+        const Facet = await ethers.getContractFactory(FacetName);
+        const facet = await Facet.deploy();
+        await facet.deployed();
+        //console.log(`${FacetName} deployed: ${facet.address}`);
+        cut.push({
+            facetAddress: facet.address,
+            action: FacetCutAction.Add,
+            functionSelectors: getSelectors(facet),
+        });
+        facets[FacetName] = await ethers.getContractAt(
+            FacetName,
+            diamond.address
+        );
+    }
+
+    // upgrade diamond with facets
+    //console.log("");
+    // console.log("Diamond Cut:", cut);
+    const diamondCut = await ethers.getContractAt(
+        "IDiamondCut",
+        diamond.address
+    );
+    let tx;
+    let receipt;
+    // call to init function
+    let functionCall = diamondInit.interface.encodeFunctionData("init");
+    tx = await diamondCut.diamondCut(cut, diamondInit.address, functionCall);
+    //console.log("Diamond cut tx: ", tx.hash);
+    receipt = await tx.wait();
+    if (!receipt.status) {
+        throw Error(`Diamond upgrade failed: ${tx.hash}`);
+    }
+    //console.log("Completed diamond cut");
+
+    return [diamond, facets];
+};
+
 const Deployy = async () => {
-    [owner, account1, account2, account3, bot, treasury] = await ethers.getSigners();
+    [owner, account1, account2, account3, bot, treasury] =
+        await ethers.getSigners();
 
     let Token = await ethers.getContractFactory("TestnetUSDC");
     let token = await Token.deploy();
@@ -19,20 +104,27 @@ const Deployy = async () => {
     let factory = await upgrades.deployProxy(Factory, [security.address]);
     await factory.deployed();
 
-    let Router = await ethers.getContractFactory("CicleoSubscriptionRouter");
-    let router = await upgrades.deployProxy(Router, [
-        factory.address,
-        treasury.address,
-        15,
-        bot.address,
-    ]);
-    await router.deployed();
+    const [router, facets] = await deployDiamond(owner);
+
+    await facets.AdminFacet.setFactory(factory.address);
+    await facets.PaymentFacet.setTaxRate(15);
+    await facets.PaymentFacet.setBotAccount(bot.address);
+    await facets.PaymentFacet.setTax(treasury.address);
 
     await security.setFactory(factory.address);
 
     await factory.setRouterSubscription(router.address);
 
-    return [token, factory, router, security, owner, account1, account2, account3];
+    return [
+        token,
+        factory,
+        facets,
+        security,
+        owner,
+        account1,
+        account2,
+        account3,
+    ];
 };
 
 describe("Subscription Test", function () {
@@ -47,8 +139,16 @@ describe("Subscription Test", function () {
     let account3;
 
     beforeEach(async function () {
-        [token, factory, router, security, owner, account1, account2, account3] =
-            await Deployy();
+        [
+            token,
+            factory,
+            router,
+            security,
+            owner,
+            account1,
+            account2,
+            account3,
+        ] = await Deployy();
 
         await factory.createSubscriptionManager(
             "Test",
@@ -70,7 +170,11 @@ describe("Subscription Test", function () {
         );
         subManager = await SubManager.attach(await factory.ids(1));
 
-        await router.newSubscription(1, utils.parseEther("10"), "Test");
+        await router.SubscriptionTypesFacet.newSubscription(
+            1,
+            utils.parseEther("10"),
+            "Test"
+        );
 
         await token
             .connect(account1)
@@ -78,9 +182,10 @@ describe("Subscription Test", function () {
     });
 
     it("Verify if factory return good name", async function () {
-        const subManagerStruct = await router.getSubscriptionsManager(
-            owner.address
-        );
+        const subManagerStruct =
+            await router.SubscriptionTypesFacet.getSubscriptionsManager(
+                owner.address
+            );
 
         expect(subManagerStruct[0][0]).to.equal(1);
         expect(subManagerStruct[0][1]).to.equal("Test");
@@ -101,9 +206,11 @@ describe("Subscription Test", function () {
         await subManager
             .connect(account1)
             .changeSubscriptionLimit(utils.parseEther("10"));
-        await router
-            .connect(account1)
-            .subscribe(1, 1, ethers.constants.AddressZero);
+        await router.PaymentFacet.connect(account1).subscribe(
+            1,
+            1,
+            ethers.constants.AddressZero
+        );
 
         expect(await token.balanceOf(account1.address)).to.be.equal(
             utils.parseEther("90")
@@ -119,14 +226,18 @@ describe("Subscription Test", function () {
 
     it("Pay with wrong subscription type", async function () {
         await expect(
-            router
-                .connect(account1)
-                .subscribe(1, 0, ethers.constants.AddressZero)
+            router.PaymentFacet.connect(account1).subscribe(
+                1,
+                0,
+                ethers.constants.AddressZero
+            )
         ).to.be.revertedWith("Wrong sub type");
         await expect(
-            router
-                .connect(account1)
-                .subscribe(1, 2, ethers.constants.AddressZero)
+            router.PaymentFacet.connect(account1).subscribe(
+                1,
+                2,
+                ethers.constants.AddressZero
+            )
         ).to.be.revertedWith("Wrong sub type");
     });
 
@@ -134,9 +245,11 @@ describe("Subscription Test", function () {
         await subManager
             .connect(account1)
             .changeSubscriptionLimit(utils.parseEther("10"));
-        await router
-            .connect(account1)
-            .subscribe(1, 1, ethers.constants.AddressZero);
+        await router.PaymentFacet.connect(account1).subscribe(
+            1,
+            1,
+            ethers.constants.AddressZero
+        );
 
         expect(
             (await subManager.getUserSubscriptionStatus(account1.address))[0]
@@ -155,9 +268,11 @@ describe("Subscription Test", function () {
 
     it("Subscription approval", async function () {
         await expect(
-            router
-                .connect(account1)
-                .subscribe(1, 1, ethers.constants.AddressZero)
+            router.PaymentFacet.connect(account1).subscribe(
+                1,
+                1,
+                ethers.constants.AddressZero
+            )
         ).to.be.revertedWith(
             "You need to approve our contract to spend this amount of token"
         );
@@ -166,11 +281,13 @@ describe("Subscription Test", function () {
             .connect(account1)
             .changeSubscriptionLimit(utils.parseEther("10"));
 
-        await router
-            .connect(account1)
-            .subscribe(1, 1, ethers.constants.AddressZero);
+        await router.PaymentFacet.connect(account1).subscribe(
+            1,
+            1,
+            ethers.constants.AddressZero
+        );
 
-        await router.editSubscription(
+        await router.SubscriptionTypesFacet.editSubscription(
             1,
             1,
             utils.parseEther("20"),
@@ -182,7 +299,10 @@ describe("Subscription Test", function () {
         await network.provider.send("evm_mine");
 
         await expect(
-            router.connect(bot).subscriptionRenew(1, account1.address)
+            router.PaymentFacet.connect(bot).subscriptionRenew(
+                1,
+                account1.address
+            )
         ).to.be.revertedWith(
             "You need to approve our contract to spend this amount of tokens"
         );
@@ -193,11 +313,15 @@ describe("Subscription Test", function () {
     });
 
     it("Get Subscription", async function () {
-        expect((await router.getSubscriptions(1))[0][0]).to.be.equal(
-            utils.parseEther("10")
-        );
-        expect((await router.getSubscriptions(1))[0][1]).to.be.equal(true);
-        expect((await router.getSubscriptions(1))[0][2]).to.be.equal("Test");
+        expect(
+            (await router.SubscriptionTypesFacet.getSubscriptions(1))[0][0]
+        ).to.be.equal(utils.parseEther("10"));
+        expect(
+            (await router.SubscriptionTypesFacet.getSubscriptions(1))[0][1]
+        ).to.be.equal(true);
+        expect(
+            (await router.SubscriptionTypesFacet.getSubscriptions(1))[0][2]
+        ).to.be.equal("Test");
     });
 
     it("Subscription renew", async function () {
@@ -208,20 +332,21 @@ describe("Subscription Test", function () {
         await subManager
             .connect(account1)
             .changeSubscriptionLimit(utils.parseEther("10"));
-        await router
-            .connect(account1)
-            .subscribe(1, 1, ethers.constants.AddressZero);
+        await router.PaymentFacet.connect(account1).subscribe(
+            1,
+            1,
+            ethers.constants.AddressZero
+        );
 
         expect(await token.balanceOf(account1.address)).to.be.equal(
             utils.parseEther("90")
         );
 
         await expect(
-            router.subscriptionRenew(1, account1.address)
-        ).to.be.revertedWith("Not allowed to");
-
-        await expect(
-            router.connect(bot).subscriptionRenew(1, account1.address)
+            router.PaymentFacet.connect(bot).subscriptionRenew(
+                1,
+                account1.address
+            )
         ).to.be.revertedWith(
             "You can't renew before the end of your subscription"
         );
@@ -230,8 +355,8 @@ describe("Subscription Test", function () {
         await network.provider.send("evm_mine");
 
         await expect(
-            router.subscriptionRenew(1, account1.address)
-        ).to.be.revertedWith("Not allowed to");
+            router.PaymentFacet.subscriptionRenew(1, account1.address)
+        ).to.be.revertedWith("Only bot");
 
         expect(
             (await subManager.getUserSubscriptionStatus(account1.address))[1]
@@ -241,7 +366,10 @@ describe("Subscription Test", function () {
             utils.parseEther("90")
         );
 
-        await router.connect(bot).subscriptionRenew(1, account1.address);
+        await router.PaymentFacet.connect(bot).subscriptionRenew(
+            1,
+            account1.address
+        );
 
         expect(await token.balanceOf(account1.address)).to.be.equal(
             utils.parseEther("80")
@@ -260,20 +388,21 @@ describe("Subscription Test", function () {
         await subManager
             .connect(account1)
             .changeSubscriptionLimit(utils.parseEther("10"));
-        await router
-            .connect(account1)
-            .subscribe(1, 1, ethers.constants.AddressZero);
+        await router.PaymentFacet.connect(account1).subscribe(
+            1,
+            1,
+            ethers.constants.AddressZero
+        );
 
         expect(await token.balanceOf(account1.address)).to.be.equal(
             utils.parseEther("90")
         );
 
         await expect(
-            router.subscriptionRenew(1, account1.address)
-        ).to.be.revertedWith("Not allowed to");
-
-        await expect(
-            router.connect(bot).subscriptionRenew(1, account1.address)
+            router.PaymentFacet.connect(bot).subscriptionRenew(
+                1,
+                account1.address
+            )
         ).to.be.revertedWith(
             "You can't renew before the end of your subscription"
         );
@@ -281,15 +410,14 @@ describe("Subscription Test", function () {
         await network.provider.send("evm_increaseTime", [30 * 86400]);
         await network.provider.send("evm_mine");
 
-        await expect(
-            router.subscriptionRenew(1, account1.address)
-        ).to.be.revertedWith("Not allowed to");
-
         expect(await token.balanceOf(account1.address)).to.be.equal(
             utils.parseEther("90")
         );
 
-        await router.connect(bot).subscriptionRenew(1, account1.address);
+        await router.PaymentFacet.connect(bot).subscriptionRenew(
+            1,
+            account1.address
+        );
 
         expect(await token.balanceOf(account1.address)).to.be.equal(
             utils.parseEther("80")
@@ -307,7 +435,7 @@ describe("Subscription Test", function () {
         await subManager
             .connect(account1)
             .changeSubscriptionLimit(utils.parseEther("10"));
-        await router
+        await router.PaymentFacet
             .connect(account1)
             .subscribe(1, 1, ethers.constants.AddressZero);
 
@@ -320,8 +448,8 @@ describe("Subscription Test", function () {
     });
 
     it("Active Subscription Count", async function () {
-        await router.newSubscription(1, utils.parseEther("10"), "Test");
-        await router.editSubscription(
+        await router.SubscriptionTypesFacet.newSubscription(1, utils.parseEther("10"), "Test");
+        await router.SubscriptionTypesFacet.editSubscription(
             1,
             1,
             utils.parseEther("10"),
@@ -329,9 +457,9 @@ describe("Subscription Test", function () {
             false
         );
 
-        expect(await router.getActiveSubscriptionCount(1)).to.be.equal(1);
+        expect(await router.SubscriptionTypesFacet.getActiveSubscriptionCount(1)).to.be.equal(1);
 
-        await router.editSubscription(
+        await router.SubscriptionTypesFacet.editSubscription(
             1,
             2,
             utils.parseEther("10"),
@@ -339,7 +467,7 @@ describe("Subscription Test", function () {
             false
         );
 
-        expect(await router.getActiveSubscriptionCount(1)).to.be.equal(0);
+        expect(await router.SubscriptionTypesFacet.getActiveSubscriptionCount(1)).to.be.equal(0);
     });
 
     it("Delete SubManager", async function () {
@@ -355,7 +483,7 @@ describe("Subscription Test", function () {
     });
 
     it("Get Owners", async function () {
-        const subManagerInfo = await router.getSubscriptionManager(1);
+        const subManagerInfo = await router.SubscriptionTypesFacet.getSubscriptionManager(1);
 
         expect(subManagerInfo.owners[0]).to.be.equal(owner.address);
     });
@@ -368,16 +496,16 @@ describe("Subscription Test", function () {
         await subManager
             .connect(account1)
             .changeSubscriptionLimit(utils.parseEther("10"));
-        await router
+        await router.PaymentFacet
             .connect(account1)
             .subscribe(1, 1, ethers.constants.AddressZero);
-        await router.newSubscription(1, utils.parseEther("50"), "Test");
+        await router.SubscriptionTypesFacet.newSubscription(1, utils.parseEther("50"), "Test");
 
         await network.provider.send("evm_increaseTime", [15 * 86400]);
         await network.provider.send("evm_mine");
 
         expect(
-            await router.getChangeSubscriptionPrice(1, account1.address, 2)
+            await router.PaymentFacet.getChangeSubscriptionPrice(1, account1.address, 2)
         ).to.be.equal(utils.parseEther("19.999984567901234567"));
     });
 
@@ -385,11 +513,11 @@ describe("Subscription Test", function () {
         expect(await token.balanceOf(account3.address)).to.be.equal(0);
 
         //Set referral percent to 1%
-        await router.setReferralPercent(1, 10);
+        await router.PaymentFacet.setReferralPercent(1, 10);
         await subManager
             .connect(account1)
             .changeSubscriptionLimit(utils.parseEther("10"));
-        await router.connect(account1).subscribe(1, 1, account3.address);
+        await router.PaymentFacet.connect(account1).subscribe(1, 1, account3.address);
 
         expect(await token.balanceOf(account3.address)).to.be.equal(0); //utils.parseEther("0.0985")
     });
@@ -398,65 +526,119 @@ describe("Subscription Test", function () {
         expect(await token.balanceOf(account3.address)).to.be.equal(0);
 
         //Set referral percent to 1%
-        await router.setReferralPercent(1, 10);
+        await router.PaymentFacet.setReferralPercent(1, 10);
 
-        await router.editAccount(1, account3.address, Math.ceil(Date.now() / 1000) + 86400, 1);
+        await router.AdminFacet.editAccount(
+            1,
+            account3.address,
+            Math.ceil(Date.now() / 1000) + 86400,
+            1
+        );
 
-        console.log("jfjur")
+        console.log("jfjur");
         await subManager
             .connect(account1)
             .changeSubscriptionLimit(utils.parseEther("10"));
-        await router.connect(account1).subscribe(1, 1, account3.address);
+        await router.PaymentFacet.connect(account1).subscribe(1, 1, account3.address);
 
         expect(await token.balanceOf(account3.address)).to.be.equal(0); //utils.parseEther("0.0985")
     });
 
     it("Free subscription test", async function () {
-        await router.newSubscription(1, utils.parseEther("0"), "Test");
+        await router.SubscriptionTypesFacet.newSubscription(1, utils.parseEther("0"), "Test");
 
-        expect(await token.balanceOf(account1.address)).to.be.equal(utils.parseEther("100"));
+        expect(await token.balanceOf(account1.address)).to.be.equal(
+            utils.parseEther("100")
+        );
 
         await subManager
             .connect(account1)
             .changeSubscriptionLimit(utils.parseEther("10"));
-        await router.connect(account1).subscribe(1, 2, ethers.constants.AddressZero);
+        await router.PaymentFacet
+            .connect(account1)
+            .subscribe(1, 2, ethers.constants.AddressZero);
 
-        expect(await token.balanceOf(account1.address)).to.be.equal(utils.parseEther("100"));
+        expect(await token.balanceOf(account1.address)).to.be.equal(
+            utils.parseEther("100")
+        );
 
         await network.provider.send("evm_increaseTime", [90 * 86400]);
         await network.provider.send("evm_mine");
 
-        const res = await subManager.getUserSubscriptionStatus(account1.address);
+        const res = await subManager.getUserSubscriptionStatus(
+            account1.address
+        );
 
         expect(res.isActive).to.equal(true);
 
-        await router.connect(account1).subscribe(1, 1, ethers.constants.AddressZero);
+        console.log("khgdjhg")
 
-        expect((await subManager.getUserSubscriptionStatus(account1.address))[1]).to.equal(true);
+        await router.PaymentFacet
+            .connect(account1)
+            .subscribe(1, 1, ethers.constants.AddressZero);
+
+        expect(
+            (await subManager.getUserSubscriptionStatus(account1.address))[1]
+        ).to.equal(true);
 
         await network.provider.send("evm_increaseTime", [30 * 86400]);
         await network.provider.send("evm_mine");
 
-        expect((await subManager.getUserSubscriptionStatus(account1.address))[1]).to.equal(false);
+        expect(
+            (await subManager.getUserSubscriptionStatus(account1.address))[1]
+        ).to.equal(false);
     });
 
-    it("Test decode calldata", async function () { 
-        const calldataLiFi = ethers.utils.arrayify("0x21d867356cbd603e4f678009be36ffc02f1ed0767c1e6c8d8531d5a0395391c8000000000000000000000000000000000000000000000000000000000000008000000000000000000000000004068da6c83afcfa0e13ba15a6696662335d5b75000000000000000000000000631cf6b04528289a9a015d09d373ce2cc0e7262d00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000a2906f6fa75657555dd96fa087647b927d01e4ed000000000000000000000000a2906f6fa75657555dd96fa087647b927d01e4ed00000000000000000000000004068da6c83afcfa0e13ba15a6696662335d5b7500000000000000000000000004068da6c83afcfa0e13ba15a6696662335d5b7500000000000000000000000000000000000000000000000000000000000f424000000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002429e99f07000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000")
+    it("Test bridge tx", async function () {
+        const message = await router.BridgeFacet.getMessage(1, 1, account1.address, utils.parseEther("10"), 0)
 
-        const calldataInput = ethers.utils.arrayify("0x29e99f07000000000000000000000000000000000000000000000000000000000000000c")
+        console.log(message)
 
-        let Bridge = await ethers.getContractFactory(
-            "CicleoSubscriptionBridgeManager"
-        );
-        let bridge = await Bridge.deploy("0x04068DA6C83AFCFA0e13ba15A6696662335D5B75");
-        await bridge.deployed();
+        const signed = await sign(account1,message)
 
-        console.log(calldataLiFi)
+        console.log(signed)
 
-        const res = await bridge.validateDestinationCalldata(calldataLiFi, calldataInput);
+        await token.mint(utils.parseEther("10"))
 
-        console.log(res)
+        await token.approve(router.BridgeFacet.address, utils.parseEther("10"))
+
+        await router.BridgeFacet.bridgeSubscribe(1, 1, account1.address, 1, token.address, utils.parseEther("10"), ethers.constants.AddressZero, signed)
+
+        expect(
+            (await subManager.getUserSubscriptionStatus(account1.address))[0]
+        ).to.equal(1); 
+
+        expect(
+            (await subManager.getUserSubscriptionStatus(account1.address))[1]
+        ).to.equal(true);
     })
+
+    it("Test bridge tx with change", async function () {
+        const message = await router.BridgeFacet.getMessage(1, 1, account1.address, utils.parseEther("10"), 0)
+        const signed = await sign(account1,message)
+
+        await token.mint(utils.parseEther("15"))
+
+        await token.approve(router.BridgeFacet.address, utils.parseEther("10"))
+
+        await router.BridgeFacet.bridgeSubscribe(1, 1, account1.address, 1, token.address, utils.parseEther("10"), ethers.constants.AddressZero, signed)
+
+        await router.SubscriptionTypesFacet.newSubscription(
+            1,
+            utils.parseEther("15"),
+            "Test"
+        );
+
+        const amount = await subManager.getAmountChangeSubscription(account1.address, 2)
+
+        console.log(amount.toString())
+
+        const message2 = await router.BridgeFacet.getMessage(1, 2, account1.address, amount.toString(), 0)
+        const signed2 = await sign(account1, message)
+        
+
+    })
+
 
     /* it("Refund Upgrade", async function () { 
         expect(await token.balanceOf(account1.address)).to.be.equal(utils.parseEther("100"));
