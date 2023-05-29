@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: CC BY-NC 2.0
 pragma solidity ^0.8.9;
 
-import "hardhat/console.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -16,7 +15,7 @@ contract CicleoSubscriptionSecurity is
     ReentrancyGuardUpgradeable
 {
     /// @notice Emitted when a new owner pass is minted
-    event MintOwnerPass(address minter, uint256 subscriptionId);
+    event MintOwnerPass(address minter, uint256 subscriptionManagerId);
 
     /// @notice URI base of the NFTs
     string _baseTokenURI;
@@ -170,16 +169,18 @@ contract CicleoSubscriptionSecurity is
 
     /// @notice Burn a NFT when the subscription manager is deleted (called by the subscription manager)
     function deleteSubManager() external {
-        uint256 subscriptionId = factory.subscriptionManagerId(msg.sender);
+        uint256 subscriptionManagerId = factory.subscriptionManagerId(
+            msg.sender
+        );
 
-        require(subscriptionId != 0, "Only subManager can burn");
+        require(subscriptionManagerId != 0, "Only subManager can burn");
 
         for (
             uint256 i = 0;
-            i < ownershipBySubscriptionId[subscriptionId].length;
+            i < ownershipBySubscriptionId[subscriptionManagerId].length;
             i++
         ) {
-            _burn(ownershipBySubscriptionId[subscriptionId][i]);
+            _burn(ownershipBySubscriptionId[subscriptionManagerId][i]);
         }
     }
 }

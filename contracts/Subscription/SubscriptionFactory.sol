@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: CC BY-NC 2.0
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.0;
 
-import "hardhat/console.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {IRouter} from "./Types/CicleoTypes.sol";
 import {CicleoSubscriptionSecurity} from "./SubscriptionSecurity.sol";

@@ -91,6 +91,7 @@ module.exports = {
             url: "https://rpcapi.fantom.network/",
             chainId: 250,
             accounts: [`${PRIVATE_KEY}`],
+            gasPrice: 58000000000
         },
         bsbTest: {
             url: "https://bsc-testnet.public.blastapi.io",
@@ -101,6 +102,7 @@ module.exports = {
             url: "https://polygon-rpc.com",
             chainId: 137,
             accounts: [`${PRIVATE_KEY}`],
+            gasPrice: 180000000000
         }
     },
     etherscan: {

@@ -4,6 +4,7 @@ pragma solidity ^0.8.9;
 import {SwapDescription, IOpenOceanCaller} from "../Types/CicleoTypes.sol";
 
 contract FakeRouterSwap {
+    // solc-ignore-next-line unused-param
     function swap(
         IOpenOceanCaller executor,
         SwapDescription memory desc,
