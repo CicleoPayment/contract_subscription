@@ -988,11 +988,6 @@ const getQuote = async () => {
     // We would like to stake this amount of KLIMA to get sKLIMA
     const stakeAmount = "1000000";
 
-    const bridgeTx = await new ethers.Contract(
-        "0xd54140d51657e59aD74C2F5aE7EF14aFE5990228",
-        DIAMOND_BRIDGE_ABI
-    ).populateTransaction.test(req.params.submanagerid,req.params.subscriptionid,req.params.user,stakeAmount,"0x0");
-
     const quoteRequest = {
         fromChain: "POL",
         fromToken: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
@@ -1000,15 +995,15 @@ const getQuote = async () => {
         toChain: "FTM",
         toToken: "0x04068DA6C83AFCFA0e13ba15A6696662335D5B75",
         toAmount: stakeAmount,
-        toContractAddress: bridgeTx.to,
-        toContractCallData: bridgeTx.data,
+        toContractAddress: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+        toContractCallData: "0x",
         toContractGasLimit: "900000",
         maxPriceImpact: "0.5",
     };
 
-    console.log(stakeKlimaTx.data);
-
     const response = await axios.post(endpoint, quoteRequest);
+
+    console.log(response.data);
 
     const data = response.data.transactionRequest.data;
 
