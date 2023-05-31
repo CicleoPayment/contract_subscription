@@ -5,7 +5,7 @@ require("hardhat-gas-reporter");
 require("@typechain/hardhat");
 require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-waffle");
-require('dotenv').config()
+require("dotenv").config();
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
 task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
@@ -78,7 +78,7 @@ module.exports = {
         },
         avalancheMain: {
             url: "https://api.avax.network/ext/bc/C/rpc",
-            gasPrice: 225000000000,
+            gasPrice: 27000000000,
             chainId: 43114,
             accounts: [`${PRIVATE_KEY}`],
         },
@@ -86,12 +86,13 @@ module.exports = {
             url: "https://bsc-dataseed.binance.org/",
             chainId: 56,
             accounts: [`${PRIVATE_KEY}`],
+            gasPrice: 3000000000,
         },
         fantom: {
             url: "https://rpcapi.fantom.network/",
             chainId: 250,
             accounts: [`${PRIVATE_KEY}`],
-            gasPrice: 58000000000
+            gasPrice: 58000000000,
         },
         bsbTest: {
             url: "https://bsc-testnet.public.blastapi.io",
@@ -102,8 +103,8 @@ module.exports = {
             url: "https://polygon-rpc.com",
             chainId: 137,
             accounts: [`${PRIVATE_KEY}`],
-            gasPrice: 180000000000
-        }
+            gasPrice: 180000000000,
+        },
     },
     etherscan: {
         apiKey: {
@@ -113,7 +114,7 @@ module.exports = {
             bscTestnet: BSC_KEY,
             bsc: BSC_KEY,
             opera: FANTOM_KEY,
-            polygon: POLYGON_KEY
+            polygon: POLYGON_KEY,
         },
     },
 };

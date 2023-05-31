@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: CC BY-NC 2.0
 pragma solidity ^0.8.0;
 
-import {CicleoSubscriptionManager} from "./../SubscriptionManager.sol";
+import {CicleoSubscriptionManager} from "./../../SubscriptionManager.sol";
 import {LibAdmin} from "../Libraries/LibAdmin.sol";
 import {LibPayment} from "../Libraries/LibPayment.sol";
 import {LibSubscriptionTypes} from "../Libraries/LibSubscriptionTypes.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-import {IERC20} from "./../Interfaces/IERC20.sol";
+import {IERC20} from "./../../Interfaces/IERC20.sol";
 
 struct PaymentParameters {
     uint256 chainId;

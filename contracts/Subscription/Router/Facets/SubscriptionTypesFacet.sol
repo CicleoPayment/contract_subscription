@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: CC BY-NC 2.0
 pragma solidity ^0.8.0;
 
-import {SubscriptionStruct, MinimifiedSubscriptionManagerStruct, SubscriptionManagerStruct} from "../Types/CicleoTypes.sol";
+import {SubscriptionStruct, MinimifiedSubscriptionManagerStruct, SubscriptionManagerStruct} from "../../Types/CicleoTypes.sol";
 import {LibAdmin} from "../Libraries/LibAdmin.sol";
 import {LibPayment} from "../Libraries/LibPayment.sol";
-import {CicleoSubscriptionManager} from "../SubscriptionManager.sol";
-import {CicleoSubscriptionSecurity} from "../SubscriptionSecurity.sol";
+import {CicleoSubscriptionManager} from "../../SubscriptionManager.sol";
+import {CicleoSubscriptionSecurity} from "../../SubscriptionSecurity.sol";
 
 contract SubscriptionTypesFacet {
     bytes32 internal constant NAMESPACE =

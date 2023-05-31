@@ -22,7 +22,7 @@ const deployDiamond = async (contractOwner) => {
 
     // deploy Diamond
     const Diamond = await ethers.getContractFactory(
-        "CicleoSubscriptionDiamond"
+        "CicleoSubscriptionRouterDiamond"
     );
     const diamond = await Diamond.deploy(
         contractOwner.address,
@@ -40,11 +40,12 @@ const deployDiamond = async (contractOwner) => {
 
     const FacetNames = {
         DiamondLoupeFacet: "DiamondLoupeFacet",
-        AdminFacet: "contracts/Subscription/Facets/AdminFacet.sol:AdminFacet",
+        AdminFacet:
+            "contracts/Subscription/Router/Facets/AdminFacet.sol:AdminFacet",
         BridgeFacet:
-            "contracts/Subscription/Facets/BridgeFacet.sol:BridgeFacet",
+            "contracts/Subscription/Facets/Router/BridgeFacet.sol:BridgeFacet",
         PaymentFacet:
-            "contracts/Subscription/Facets/PaymentFacet.sol:PaymentFacet",
+            "contracts/Subscription/Facets/Router/PaymentFacet.sol:PaymentFacet",
         SubscriptionTypesFacet: "SubscriptionTypesFacet",
     };
     const cut = [];

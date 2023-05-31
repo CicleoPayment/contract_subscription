@@ -11,6 +11,21 @@ struct StargateData {
     bytes callData;
 }
 
+/// @param callData The data to execute on the receiving chain. If no crosschain call is needed, then leave empty.
+/// @param callTo The address of the contract on dest chain that will receive bridged funds and execute data
+/// @param relayerFee The amount of relayer fee the tx called xcall with
+/// @param slippageTol Max bps of original due to slippage (i.e. would be 9995 to tolerate .05% slippage)
+/// @param delegate Destination delegate address
+/// @param destChainDomainId The Amarok-specific domainId of the destination chain
+struct AmarokData {
+    bytes callData;
+    address callTo;
+    uint256 relayerFee;
+    uint256 slippageTol;
+    address delegate;
+    uint32 destChainDomainId;
+}
+
 interface ILiFi {
     /// Structs ///
 

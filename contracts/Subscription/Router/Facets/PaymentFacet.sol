@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: CC BY-NC 2.0
 pragma solidity ^0.8.0;
 
-import {LibDiamond} from "../../Diamond/Libraries/LibDiamond.sol";
+import {LibDiamond} from "../../../Diamond/Libraries/LibDiamond.sol";
 import {LibAdmin} from "../Libraries/LibAdmin.sol";
 import {LibPayment} from "../Libraries/LibPayment.sol";
 import {LibSubscriptionTypes} from "../Libraries/LibSubscriptionTypes.sol";
-import {CicleoSubscriptionFactory, CicleoSubscriptionManager} from "./../SubscriptionFactory.sol";
-import {SubscriptionStruct, UserData, SubscriptionManagerStruct, MinimifiedSubscriptionManagerStruct, IOpenOceanCaller, SwapDescription, DynamicSubscriptionData} from "./../Types/CicleoTypes.sol";
-import {IERC20} from "../Interfaces/IERC20.sol";
+import {CicleoSubscriptionFactory, CicleoSubscriptionManager} from "./../../SubscriptionFactory.sol";
+import {SubscriptionStruct, UserData, SubscriptionManagerStruct, MinimifiedSubscriptionManagerStruct, IOpenOceanCaller, SwapDescription, DynamicSubscriptionData} from "./../../Types/CicleoTypes.sol";
+import {IERC20} from "../../Interfaces/IERC20.sol";
 
 contract PaymentFacet {
     bytes32 internal constant NAMESPACE =

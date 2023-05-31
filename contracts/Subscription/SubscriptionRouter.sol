@@ -11,7 +11,7 @@ pragma solidity ^0.8.0;
 import {LibDiamond} from "../Diamond/Libraries/LibDiamond.sol";
 import {IDiamondCut} from "../Diamond/Interfaces/IDiamondCut.sol";
 
-contract CicleoSubscriptionDiamond {
+contract CicleoSubscriptionRouterDiamond {
     constructor(address _contractOwner, address _diamondCutFacet) payable {
         LibDiamond.setContractOwner(_contractOwner);
 

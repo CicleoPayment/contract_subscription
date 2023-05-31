@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: CC BY-NC 2.0
 pragma solidity ^0.8.0;
 
-import {LibDiamond} from "../../Diamond/Libraries/LibDiamond.sol";
+import {LibDiamond} from "../../../Diamond/Libraries/LibDiamond.sol";
 import {LibAdmin} from "../Libraries/LibAdmin.sol";
-import {IERC173} from "../../Diamond/Interfaces/IERC173.sol";
-import {CicleoSubscriptionFactory} from "./../SubscriptionFactory.sol";
-import {CicleoSubscriptionManager} from "./../SubscriptionManager.sol";
+import {IERC173} from "../../../Diamond/Interfaces/IERC173.sol";
+import {CicleoSubscriptionFactory} from "./../../SubscriptionFactory.sol";
+import {CicleoSubscriptionManager} from "./../../SubscriptionManager.sol";
 
 contract AdminFacet is IERC173 {
     bytes32 internal constant NAMESPACE = keccak256("com.cicleo.facets.admin");

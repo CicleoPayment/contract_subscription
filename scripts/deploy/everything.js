@@ -17,18 +17,7 @@ async function main() {
     ]);
     await factory.deployed();
 
-    //Deploy router contract
-    const Router = await ethers.getContractFactory("CicleoSubscriptionRouter");
-    const router = await upgrades.deployProxy(Router, [
-        factory.address,
-        "0x2e7BcddCD74aDE69B67E816cB32dB6F0B709Cab5", //Tax Account
-        15, //Tax percentage out of 1000
-        "0xa43194835127C17423ecABB982AAa8de4706aEBD", //Bot address
-    ]);
-    await router.deployed();
-
     await security.setFactory(factory.address);
-    await factory.setRouterSubscription(router.address);
 
     console.log("Security deployed to:", security.address);
     console.log("Router deployed to:", router.address);

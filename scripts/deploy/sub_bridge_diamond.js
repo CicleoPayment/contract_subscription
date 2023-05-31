@@ -9,15 +9,20 @@ async function deployDiamond() {
     const contractOwner = accounts[0];
 
     // deploy DiamondCutFacet
-    const DiamondCutFacet = await ethers.getContractFactory("DiamondCutFacet");
+    /*  const DiamondCutFacet = await ethers.getContractFactory("DiamondCutFacet");
     const diamondCutFacet = await DiamondCutFacet.deploy();
-    await diamondCutFacet.deployed();
-    //const diamondCutFacet = await ethers.getContractAt("DiamondCutFacet", "0xCBf4077c4919fcC019d0B47F157480C4CC985c7d")
+    await diamondCutFacet.deployed(); */
+    /* const diamondCutFacet = await ethers.getContractAt(
+        "DiamondCutFacet",
+        "0x7FD0A008f1C1D77B4750d9808c63eF82a5c54F5c"
+    ); */
 
-    console.log("DiamondCutFacet deployed:", diamondCutFacet.address);
+    /* console.log("DiamondCutFacet deployed:", diamondCutFacet.address);
 
     // deploy Diamond
-    const Diamond = await ethers.getContractFactory("Diamond");
+    const Diamond = await ethers.getContractFactory(
+        "CicleoSubscriptionBridgeDiamond"
+    );
     const diamond = await Diamond.deploy(
         contractOwner.address,
         diamondCutFacet.address
@@ -31,33 +36,40 @@ async function deployDiamond() {
     const DiamondInit = await ethers.getContractFactory("DiamondInit");
     const diamondInit = await DiamondInit.deploy();
     await diamondInit.deployed();
-    console.log("DiamondInit deployed:", diamondInit.address);
+    console.log("DiamondInit deployed:", diamondInit.address); */
 
     // deploy facets
     console.log("");
     console.log("Deploying facets");
-    const FacetNames = [
-        "DiamondLoupeFacet",
-        "AdminFacet",
-        "BridgeFacet",
-        "SubscriptionTypesFacet",
-        "PaymentFacet",
-    ];
+    const FacetNames = {
+        /* DiamondLoupeFacet: "DiamondLoupeFacet",
+        AdminFacet:
+            "contracts/Subscription/Bridge/Facets/AdminFacet.sol:AdminFacet", 
+        BridgeFacet:
+            "contracts/Subscription/Bridge/Facets/BridgeFacet.sol:BridgeFacet",*/
+        /* StargateFacet: "StargateFacet", */
+        AmarokFacet: "AmarokFacet",
+    };
     const cut = [];
-    for (const FacetName of FacetNames) {
-        const Facet = await ethers.getContractFactory(FacetName);
+    const facets = {};
+    for (const FacetName in FacetNames) {
+        const Facet = await ethers.getContractFactory(FacetNames[FacetName]);
         const facet = await Facet.deploy();
         await facet.deployed();
-        console.log(`${FacetName} deployed: ${facet.address}`);
-        cut.push({
+        //console.log(`${FacetName} deployed: ${facet.address}`);
+        /* cut.push({
             facetAddress: facet.address,
             action: FacetCutAction.Add,
             functionSelectors: getSelectors(facet),
         });
+        facets[FacetName] = await ethers.getContractAt(
+            FacetNames[FacetName],
+            diamond.address
+        ); */
     }
 
     // upgrade diamond with facets
-    console.log("");
+    /* console.log("");
     console.log("Diamond Cut:", cut);
     const diamondCut = await ethers.getContractAt(
         "IDiamondCut",
@@ -74,7 +86,7 @@ async function deployDiamond() {
         throw Error(`Diamond upgrade failed: ${tx.hash}`);
     }
     console.log("Completed diamond cut");
-    return diamond.address;
+    return diamond.address; */
 }
 
 // We recommend this pattern to be able to use async/await everywhere

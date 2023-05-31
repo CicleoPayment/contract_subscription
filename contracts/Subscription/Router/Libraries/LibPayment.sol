@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: CC BY-NC 2.0
 pragma solidity ^0.8.0;
 
-import {IDiamondCut} from "../../Diamond/Interfaces/IDiamondCut.sol";
-import {CicleoSubscriptionManager} from "../SubscriptionManager.sol";
+import {IDiamondCut} from "../../../Diamond/Interfaces/IDiamondCut.sol";
+import {CicleoSubscriptionManager} from "../../SubscriptionManager.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./LibAdmin.sol";
 import {LibSubscriptionTypes} from "./LibSubscriptionTypes.sol";

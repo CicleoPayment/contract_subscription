@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: CC BY-NC 2.0
 pragma solidity ^0.8.0;
 
-import {IDiamondCut} from "../../Diamond/Interfaces/IDiamondCut.sol";
-import {SubscriptionStruct} from "../Types/CicleoTypes.sol";
+import {IDiamondCut} from "../../../Diamond/Interfaces/IDiamondCut.sol";
+import {SubscriptionStruct} from "../../Types/CicleoTypes.sol";
 
 library LibSubscriptionTypes {
     bytes32 constant DIAMOND_STORAGE_POSITION =
