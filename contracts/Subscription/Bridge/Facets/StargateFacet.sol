@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import {LibAdmin} from "../Libraries/LibAdmin.sol";
 import {LibBridge, UserBridgeData, PaymentParameters, ILiFi, ILiFiDiamond, LibSwap, StargateData, Storage} from "../Libraries/LibBridge.sol";
+import {LibStargate} from "../Libraries/LibStargate.sol";
 import {IERC20} from "./../../Interfaces/IERC20.sol";
 
 contract StargateFacet {
@@ -78,7 +79,7 @@ contract StargateFacet {
         paymentParams.chainId = LibBridge.getChainID();
 
         //Remplace the destination call by our one
-        _stargateData.callData = LibBridge.handleSubscriptionCallback(
+        _stargateData.callData = LibStargate.handleSubscriptionCallback(
             paymentParams,
             msg.sender,
             referral,
@@ -107,7 +108,7 @@ contract StargateFacet {
         LibBridge.verifyRenew(paymentParams, user);
 
         //Remplace the destination call by our one
-        _stargateData.callData = LibBridge.handleRenewCallback(
+        _stargateData.callData = LibStargate.handleRenewCallback(
             paymentParams,
             user,
             _stargateData.callData

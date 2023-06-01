@@ -47,6 +47,14 @@ contract BridgeFacet {
         );
     }
 
+    function users(
+        uint256 srcChainId,
+        uint256 subManagerId,
+        address user
+    ) external view returns (UserBridgeData memory) {
+        return getStorage().users[srcChainId][subManagerId][user];
+    }
+
     //----Diamond storage functions-------------------------------------//
 
     /// @dev fetch local storage

@@ -42,11 +42,12 @@ async function deployDiamond() {
     console.log("");
     console.log("Deploying facets");
     const FacetNames = {
+        /* BridgeFacet:
+            "contracts/Subscription/Bridge/Facets/BridgeFacet.sol:BridgeFacet", */
         /* DiamondLoupeFacet: "DiamondLoupeFacet",
         AdminFacet:
             "contracts/Subscription/Bridge/Facets/AdminFacet.sol:AdminFacet", 
-        BridgeFacet:
-            "contracts/Subscription/Bridge/Facets/BridgeFacet.sol:BridgeFacet",*/
+        ,*/
         /* StargateFacet: "StargateFacet", */
         AmarokFacet: "AmarokFacet",
     };

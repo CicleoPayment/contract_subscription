@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import {LibAdmin} from "../Libraries/LibAdmin.sol";
 import {LibBridge, UserBridgeData, PaymentParameters, ILiFi, ILiFiDiamond, LibSwap, AmarokData, Storage} from "../Libraries/LibBridge.sol";
+import {LibAmarok} from "../Libraries/LibAmarok.sol";
 import {IERC20} from "./../../Interfaces/IERC20.sol";
 
 contract AmarokFacet {
@@ -76,7 +77,7 @@ contract AmarokFacet {
         paymentParams.chainId = LibBridge.getChainID();
 
         //Remplace the destination call by our one
-        _amarokData.callData = LibBridge.handleSubscriptionCallback(
+        _amarokData.callData = LibAmarok.handleSubscriptionCallback(
             paymentParams,
             msg.sender,
             referral,
@@ -105,7 +106,7 @@ contract AmarokFacet {
         LibBridge.verifyRenew(paymentParams, user);
 
         //Remplace the destination call by our one
-        _stargateData.callData = LibBridge.handleRenewCallback(
+        _stargateData.callData = LibAmarok.handleRenewCallback(
             paymentParams,
             user,
             _stargateData.callData
