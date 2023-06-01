@@ -76,8 +76,6 @@ contract StargateFacet {
         uint256 duration,
         bytes calldata signature
     ) external payable {
-        paymentParams.chainId = LibBridge.getChainID();
-
         //Remplace the destination call by our one
         _stargateData.callData = LibStargate.handleSubscriptionCallback(
             paymentParams,
@@ -87,7 +85,7 @@ contract StargateFacet {
             _stargateData.callData
         );
 
-        LibBridge.setSubscriptionDuration(paymentParams, duration);
+        LibBridge.setSubscriptionDuration(paymentParams, duration, msg.sender);
 
         paymentWithBridgeWithStargate(
             paymentParams,

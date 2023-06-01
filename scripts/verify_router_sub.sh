@@ -1,0 +1,1 @@
+npx hardhat verify 0x616E36433dbf1453a74a4F40c0DE604A90f8f041 --network fantom --contract contracts/Subscription/SubscriptionRouter.sol:CicleoSubscriptionRouterDiamond "0x4379a3459845D827631921DE983CDCc6A54Cf021" "0x7FD0A008f1C1D77B4750d9808c63eF82a5c54F5c"

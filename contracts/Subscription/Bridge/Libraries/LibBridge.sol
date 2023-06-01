@@ -48,7 +48,7 @@ library LibBridge {
         require(
             getStorage()
             .users[paymentParams.chainId][paymentParams.subscriptionManagerId][
-                msg.sender
+                user
             ].subscriptionLimit >= paymentParams.priceInSubToken,
             "Amount too high"
         );
@@ -130,12 +130,12 @@ library LibBridge {
 
     function setSubscriptionDuration(
         PaymentParameters memory paymentParams,
-        uint256 duration
+        uint256 duration,
+        address user
     ) internal {
         getStorage()
-        .users[paymentParams.chainId][paymentParams.subscriptionManagerId][
-            msg.sender
-        ].subscriptionDuration = duration;
+        .users[paymentParams.chainId][paymentParams.subscriptionManagerId][user]
+            .subscriptionDuration = duration;
     }
 
     //----Diamond storage functions-------------------------------------//

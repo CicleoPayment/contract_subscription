@@ -74,8 +74,6 @@ contract AmarokFacet {
         uint256 duration,
         bytes calldata signature
     ) external payable {
-        paymentParams.chainId = LibBridge.getChainID();
-
         //Remplace the destination call by our one
         _amarokData.callData = LibAmarok.handleSubscriptionCallback(
             paymentParams,
@@ -85,7 +83,7 @@ contract AmarokFacet {
             _amarokData.callData
         );
 
-        LibBridge.setSubscriptionDuration(paymentParams, duration);
+        LibBridge.setSubscriptionDuration(paymentParams, duration, msg.sender);
 
         paymentWithBridgeWithAmarok(
             paymentParams,
